@@ -3,6 +3,14 @@
 This is a prototype implementation of the Id based Proxy Signature Scheme with Message Recovery as described in the paper [1].
 The implementation is written in [c](<https://en.wikipedia.org/wiki/C_(programming_language)>) and uses the [PBC](https://crypto.stanford.edu/pbc/) library, with the help of some utilities provided by the professor [Mario di Raimondo](https://diraimondo.dmi.unict.it/).
 
+## Requirements
+
+- [PBC](https://crypto.stanford.edu/pbc/)
+- [gmp](https://gmplib.org/)
+- [gcc](https://gcc.gnu.org/) o [clang](https://clang.llvm.org/)
+- _\[optional\]_ [Make](https://www.gnu.org/software/make/)
+- _\[optional\]_ [Check](https://libcheck.github.io/check/index.html)
+
 ## Directory Structure
 
 The project is structured as follows:
@@ -43,4 +51,4 @@ Once it has been compiled, the project can be run by executing the following com
 - [Mario di Raimondo](https://diraimondo.dmi.unict.it/)
 - [Crypto Engineering](https://diraimondo.dmi.unict.it/teaching/crypto/)
 
-[1]: link to paper
+[1]: https://www.researchgate.net/publication/283648628_An_Improved_ID-based_Proxy_Signature_Scheme_with_Message_Recovery
