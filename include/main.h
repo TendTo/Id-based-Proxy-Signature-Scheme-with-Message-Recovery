@@ -14,5 +14,6 @@
 #include <getopt.h>
 #include <unistd.h>
 #include "define.h"
+#include "sv-scheme.h"
 
 #endif
