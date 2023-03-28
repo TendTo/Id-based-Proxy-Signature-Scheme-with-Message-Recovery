@@ -60,6 +60,31 @@ $(ENTRY_OBJECT) $(SOURCE_OBJECTS): $(ENTRY_FILE) $(SOURCE_FILES) $(HEADER_FILES)
 	@mv $(notdir $(SOURCE_OBJECTS) $(ENTRY_OBJECT)) $(OBJ_DIR)
 
 #==============================================================================
+#  TEST TARGETS
+#==============================================================================
+
+test: $(OBJ_DIR) $(BIN_DIR) $(ENTRY_OBJECT)
+	@$(CC) $(TEST_ENTRY_FILE) $(SOURCE_OBJECTS) -o $(BIN_DIR)/$(TEST_BINARY) $(TEST_CFLAGS) $(TEST_LDLIBS) $(TEST_CDEFINE)
+	@echo "Testing...  $(YELLOW)$(BOLD)Start$(RESET)"
+	@./$(BIN_DIR)/$(TEST_BINARY) \
+	2> temp_error_file; if [ $$? -ne 0 ]; then touch _error_flag; fi; true
+	@if [ -f _error_flag ]; then \
+	  rm -f _error_flag; \
+		echo "Testing...  $(RED)$(BOLD)Error$(RESET)"; \
+		cat temp_error_file; \
+		rm -f temp_error_file; \
+		false; \
+	else \
+		if [ -s temp_error_file ]; then \
+			echo "Testing...  $(YELLOW)$(BOLD)Warning$(RESET)"; \
+			cat temp_error_file; \
+		else \
+			echo "Testing...  $(GREEN)$(BOLD)Success$(RESET)"; \
+		fi \
+	fi
+	@rm -f temp_error_file
+
+#==============================================================================
 #  UTILITY TARGETS
 #==============================================================================
 
