@@ -7,6 +7,7 @@ The implementation is written in [c](<https://en.wikipedia.org/wiki/C_(programmi
 
 - [PBC](https://crypto.stanford.edu/pbc/)
 - [gmp](https://gmplib.org/)
+- [nettle](http://www.lysator.liu.se/~nisse/nettle/)
 - [gcc](https://gcc.gnu.org/) o [clang](https://clang.llvm.org/)
 - _\[optional\]_ [Make](https://www.gnu.org/software/make/)
 - _\[optional\]_ [Check](https://libcheck.github.io/check/index.html)

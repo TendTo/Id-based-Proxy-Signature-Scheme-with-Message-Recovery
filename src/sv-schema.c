@@ -1,35 +1,70 @@
 #include "sv-scheme.h"
 
-void setup(sv_shared_params_t shared_p, sv_private_params_t private_p, int lambda)
+// #define SHA1_DIGEST_SIZE 20
+
+void setup(sv_public_params_t public_p, sv_secret_params_t secret_p, int lambda)
 {
     pbc_param_t pairing_p;
     select_pbc_param_by_security_level(pairing_p, pbc_pairing_type_a, lambda, NULL);
-    pairing_init_pbc_param(shared_p->pairing, pairing_p);
+    pairing_init_pbc_param(public_p->pairing, pairing_p);
     pbc_param_clear(pairing_p);
 
-    // Private params init
-    element_init_Zr(private_p->sk, shared_p->pairing);
+    // secret params init
+    element_init_Zr(secret_p->sk, public_p->pairing);
 
-    // Private params setup
-    element_random(private_p->sk);
+    // secret params setup
+    element_random(secret_p->sk);
+    secret_p->public_params = public_p;
 
-    // Shared params init
-    element_init_G1(shared_p->P, shared_p->pairing);
-    element_init_G1(shared_p->pk, shared_p->pairing);
+    // public params init
+    element_init_G1(public_p->P, public_p->pairing);
+    element_init_G1(public_p->pk, public_p->pairing);
 
-    // Shared params setup
-    element_random(shared_p->P);
-    element_mul_zn(shared_p->pk, shared_p->P, private_p->sk);
+    // public params setup
+    element_random(public_p->P);
+    element_mul_zn(public_p->pk, public_p->P, secret_p->sk);
+    public_p->q = pairing_length_in_bytes_x_only_G1(public_p->pairing) * 8;
+    public_p->l1 = public_p->q / 2;
+    public_p->l2 = public_p->q - public_p->l1;
 }
 
-void shared_param_clear(sv_shared_params_t shared_p)
+void extract_p(element_t pk_id, sv_public_params_t public_p, const void *identity, int len)
 {
-    element_clear(shared_p->P);
-    element_clear(shared_p->pk);
-    pairing_clear(shared_p->pairing);
+    // Hashing
+    struct sha1_ctx h;
+    uint8_t digest[SHA1_DIGEST_SIZE];
+    sha1_init(&h);
+    sha1_update(&h, len, identity);
+    sha1_digest(&h, SHA1_DIGEST_SIZE, digest);
+
+    // Generating pk for the user
+    element_init_G1(pk_id, public_p->pairing);
+    element_from_hash(pk_id, digest, SHA1_DIGEST_SIZE);
 }
 
-void private_param_clear(sv_private_params_t private_p)
+void extract_s(element_t sk_id, sv_secret_params_t secret_p, const void *identity, int len)
 {
-    element_clear(private_p->sk);
+    // Hashing
+    struct sha1_ctx h;
+    void *digest = NULL;
+    sha1_init(&h);
+    sha1_update(&h, len, identity);
+    sha1_digest(&h, SHA1_DIGEST_SIZE, digest);
+
+    // Generating sk for the user
+    element_init_G1(sk_id, secret_p->public_params->pairing);
+    element_from_hash(sk_id, digest, SHA1_DIGEST_SIZE);
+    element_mul_zn(sk_id, secret_p->public_params->P, secret_p->sk);
+}
+
+void public_param_clear(sv_public_params_t public_p)
+{
+    element_clear(public_p->P);
+    element_clear(public_p->pk);
+    pairing_clear(public_p->pairing);
+}
+
+void secret_param_clear(sv_secret_params_t secret_p)
+{
+    element_clear(secret_p->sk);
 }

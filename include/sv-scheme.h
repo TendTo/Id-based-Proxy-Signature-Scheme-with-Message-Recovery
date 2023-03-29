@@ -2,9 +2,16 @@
 #define SV_SCHEME_H
 
 #include <pbc/pbc.h>
+#include <nettle/sha1.h>
 #include "lib-misc.h"
 
-struct sv_shared_params_struct
+struct sv_init_params_struct
+{
+};
+typedef struct sv_init_params_struct *sv_init_params_ptr;
+typedef struct sv_init_params_struct sv_init_params_t[1];
+
+struct sv_public_params_struct
 {
     pairing_t pairing; // The pairing used by the scheme.
     element_t pk;      // The public key.
@@ -13,15 +20,16 @@ struct sv_shared_params_struct
     int l2;            // Number of bits of an element in G2.
     int q;             // Order of the group.
 };
-typedef struct sv_shared_params_struct *sv_shared_params_ptr;
-typedef struct sv_shared_params_struct sv_shared_params_t[1];
+typedef struct sv_public_params_struct *sv_public_params_ptr;
+typedef struct sv_public_params_struct sv_public_params_t[1];
 
-struct sv_private_params_struct
+struct sv_secret_params_struct
 {
-    element_t sk; // The master secret key.
+    sv_public_params_ptr public_params; // Public parameters of the scheme.
+    element_t sk;                       // The master secret key.
 };
-typedef struct sv_private_params_struct *sv_private_params_ptr;
-typedef struct sv_private_params_struct sv_private_params_t[1];
+typedef struct sv_secret_params_struct *sv_secret_params_ptr;
+typedef struct sv_secret_params_struct sv_secret_params_t[1];
 
 typedef struct
 {
@@ -60,20 +68,23 @@ typedef struct
  * It takes as input a security parameter lambda and return a master key sk
  * and the system's parameters (G1, G2, H0, H1, H2, F1, F2, e, P, pk, q, l1, l2).
  *
- * @param shared_params All the public parameters created through the setup.
- * @param private_params Private parameters created through the setup.
- * @param lambda The security parameter.
+ * @param public_p All the public parameters created through the setup.
+ * @param secret_p secret parameters created through the setup.
+ * @param sec_lvl The security level the scheme is expected to have.
  */
-void setup(sv_shared_params_t shared_params, sv_private_params_t private_params, int lambda);
+void setup(sv_public_params_t public_p, sv_secret_params_t secret_p, int sec_lvl);
 
 /**
  * @brief Produces the public key pk_id from an identity.
  * It uses the hash function H0 to map the any string {0, 1}*, representing the identity,
  * to an element of G1: pk_id = H0(identity).
  *
- * @param identity identity of the user.
+ * @param pk_id Public key created for the user from their identifier.
+ * @param public_p All the public parameters of the scheme.
+ * @param identity Identity of the user.
+ * @param len Length of the identity buffer.
  */
-void extract_p(identity_t identity);
+void extract_p(element_t pk_id, sv_public_params_t public_p, const void *identity, int len);
 
 /**
  * @brief Produces the secret key sk_id from an identity.
@@ -81,10 +92,12 @@ void extract_p(identity_t identity);
  * to an element of G1.
  * Then multiplies the master key sk with the result of the hash function: sk_id = sk * H0(identity).
  *
- * @param identity identity of the user.
- * @param sk secret master key.
+ * @param pk_id Private key created for the user from their identifier.
+ * @param secret_p All the secret parameters of the user.
+ * @param identity Identity of the user.
+ * @param len Length of the identity buffer.
  */
-void extract_s(identity_t identity, secret_key_t sk);
+void extract_s(element_t sk_id, sv_secret_params_t secret_p, const void *identity, int len);
 
 /**
  * @brief Delegates the right to sign messages to the identity id.
@@ -155,19 +168,19 @@ void sign_verify(proxy_signature_t ps);
 void get_id(warrant_t m);
 
 /**
- * @brief Clear the shared param struct.
+ * @brief Clear the public param struct.
  * Makes sure all elements are cleared.
  *
- * @param shared_p Parameters shared publicly.
+ * @param public_p Parameters public publicly.
  */
-void shared_param_clear(sv_shared_params_t shared_p);
+void public_param_clear(sv_public_params_t public_p);
 
 /**
- * @brief Clear the private param struct.
+ * @brief Clear the secret param struct.
  * Make sure all elements are cleared.
  *
- * @param private_p Parameters known only by the original signer.
+ * @param secret_p Parameters known only by the original signer.
  */
-void private_param_clear(sv_private_params_t private_p);
+void secret_param_clear(sv_secret_params_t secret_p);
 
 #endif // SV_SCHEME_H
