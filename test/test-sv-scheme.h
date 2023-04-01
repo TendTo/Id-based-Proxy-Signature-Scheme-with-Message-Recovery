@@ -225,6 +225,34 @@ END_TEST
 
 #pragma endregion
 
+#pragma region pk_sign
+
+START_TEST(test_pk_sign)
+{
+    sv_public_params_t public_p;
+    sv_secret_params_t secret_p;
+    delegation_t w;
+    warrant_t m;
+    element_t sk, k_sign;
+
+    memcpy(m->from, TEST_IDENTITY, IDENTITY_SIZE);
+    memcpy(m->to, TEST_IDENTITY_2, IDENTITY_SIZE);
+
+    setup(public_p, secret_p, 80, sha_1);
+    element_init_G1(sk, public_p->pairing);
+    extract_s(sk, secret_p, TEST_IDENTITY);
+    delegate(w, sk, m, public_p);
+
+    element_init_G1(k_sign, public_p->pairing);
+    element_set0(k_sign);
+    pk_gen(k_sign, sk, w, public_p);
+
+    ck_assert(!element_is0(k_sign));
+}
+END_TEST
+
+#pragma endregion
+
 #pragma region clear
 
 START_TEST(test_public_params_clear)
@@ -309,6 +337,9 @@ Suite *sv_scheme_suite()
     tcase_add_test(tc_del_verify, test_del_verify);
     tcase_add_test(tc_del_verify, test_del_verify_fail);
 
+    TCase *tc_pk_sign = tcase_create("pk_sign");
+    tcase_add_test(tc_pk_sign, test_pk_sign);
+
     TCase *tc_clear = tcase_create("clear");
     tcase_add_test(tc_clear, test_public_params_clear);
     tcase_add_test_raise_signal(tc_clear, test_public_params_already_cleared, SIGSEGV);
@@ -322,6 +353,7 @@ Suite *sv_scheme_suite()
     suite_add_tcase(s, tc_extract);
     suite_add_tcase(s, tc_delegate);
     suite_add_tcase(s, tc_del_verify);
+    suite_add_tcase(s, tc_pk_sign);
     suite_add_tcase(s, tc_clear);
 
     return s;
