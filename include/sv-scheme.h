@@ -18,8 +18,8 @@ struct sv_public_params_struct
     pairing_t pairing;     // The pairing used by the scheme.
     element_t pk;          // The public key.
     element_t P;           // The generator of G1.
-    int l1;                // Number of bits of an element in G1.
-    int l2;                // Number of bits of an element in G2.
+    int l1;                // Half of number bits of an element in G1.
+    int l2;                // Half of number bits of an element in G1.
     int q;                 // Order of the group.
     hash_type_t hash_type; // Hash algorithm used by the scheme.
 };
@@ -36,30 +36,30 @@ typedef struct sv_secret_params_struct sv_secret_params_t[1];
 
 struct warrant_struct
 {
-    sv_identity_t from;
-    sv_identity_t to;
+    sv_identity_t from; // Identity of the user that is delegating the signature.
+    sv_identity_t to;   // Identity of the user that is invested with the signature.
 };
 typedef struct warrant_struct *warrant_ptr;
 typedef struct warrant_struct warrant_t[1];
 
 struct delegation_struct
 {
-    warrant_ptr m;
-    element_t r;
-    element_t S;
+    warrant_ptr m; // Warrant of the delegation.
+    element_t r;   // r value used to verify the delegation (in GT).
+    element_t S;   // S value used to verify the delegation (in G1).
 };
 typedef struct delegation_struct *delegation_ptr;
 typedef struct delegation_struct delegation_t[1];
 
-typedef struct
+struct proxy_signature_struct
 {
-
-} proxy_signer_t;
-
-typedef struct
-{
-
-} proxy_signature_t;
+    warrant_ptr m; // Warrant of the delegation.
+    element_t r;   // r value used to verify the signature (in GT).
+    element_t V;   // V value used to verify the signature (in Zr).
+    element_t U;   // U value used to verify the signature (in G1).
+};
+typedef struct proxy_signature_struct *proxy_signature_ptr;
+typedef struct proxy_signature_struct proxy_signature_t[1];
 
 /**
  * @brief Serialize a warrant structure converting it into a byte array.
@@ -91,6 +91,17 @@ unsigned short deserialize_warrant(warrant_t m, const uint8_t buffer[WARRANT_SIZ
  * @param hash_type hash algorithm to be used.
  */
 void hash_warrant_and_r(element_t h, delegation_t w, warrant_t m, hash_type_t hash_type);
+
+/**
+ * @brief Calculate the value of beta.
+ * Starting from the message to be signed and the public parameters of the scheme, beta is obtained as:
+ * beta = F1(msg) || F2(F1(msg)) (+) msg)
+ *
+ * @param beta output of the hash function.
+ * @param msg message to be hashed.
+ * @param public_p public parameters of the scheme.
+ */
+void calculate_beta(uint8_t beta[], const uint8_t msg[], sv_public_params_t public_p);
 
 /**
  * @brief Initialization function for the scheme.
@@ -152,9 +163,9 @@ void delegate(delegation_t w, element_t sk, warrant_t m, sv_public_params_t publ
  * In any other case, 0 is returned.
  *
  * @param w delegation to be verified.
- * @param identity identity of the user who wants to delegate.
+ * @param identity identity of the user who supposedly created the delegation.
  * @param public_p All the public parameters of the scheme.
- * @return whether the delegation is valid (1) or not (0).
+ * @return whether the delegation has been created by the `identity` user (1) or not (0).
  */
 int del_verify(delegation_t w, sv_identity_t identity, sv_public_params_t public_p);
 
@@ -165,9 +176,12 @@ int del_verify(delegation_t w, sv_identity_t identity, sv_public_params_t public
  * - h = H1(m, r)
  * - psk = h * d + S
  *
+ * @param k_sign proxy signing key to be created.
+ * @param sk secret key of the user who is accepting the signature.
  * @param w delegation that validates the proxy signing key.
+ * @param public_p All the public parameters of the scheme.
  */
-void p_k_gen(delegation_t w);
+void pk_gen(element_t k_sign, element_t sk, delegation_t w, sv_public_params_t public_p);
 
 /**
  * @brief The proxy signer signs a message m.
@@ -189,14 +203,7 @@ void p_sign(char *message);
  *
  * @param ps proxy signature to be verified.
  */
-void sign_verify(proxy_signature_t ps);
-
-/**
- * @brief Get the identity of the user who signed created the warrant.
- *
- * @param m warrant to get the identity from.
- */
-void get_id(warrant_t m);
+void sign_verify(proxy_signature_t p_sig);
 
 /**
  * @brief Clear the public param struct.

@@ -17,14 +17,12 @@ unsigned short deserialize_warrant(warrant_t m, const uint8_t buffer[WARRANT_SIZ
 void hash_warrant_and_r(element_t h, delegation_t w, warrant_t m, hash_type_t hash_type)
 {
     int size = element_length_in_bytes(w->r);
-    uint8_t *digest;
+    uint8_t digest[MAX_DIGEST_SIZE];
     uint8_t h_buffer[WARRANT_SIZE + size];
     element_to_bytes(h_buffer + WARRANT_SIZE, w->r);
     serialize_warrant(h_buffer, m);
-    unsigned short digest_size = hash(&digest, h_buffer, WARRANT_SIZE + size, hash_type);
+    unsigned short digest_size = hash(digest, h_buffer, WARRANT_SIZE + size, hash_type);
     element_from_hash(h, digest, digest_size);
-
-    free(digest);
 }
 
 void setup(sv_public_params_t public_p, sv_secret_params_t secret_p, int lambda, hash_type_t hash_type)
@@ -57,28 +55,24 @@ void setup(sv_public_params_t public_p, sv_secret_params_t secret_p, int lambda,
 void extract_p(element_t pk_id, sv_public_params_t public_p, const sv_identity_t identity)
 {
     // Hashing
-    uint8_t *digest;
-    unsigned short digest_len = hash(&digest, identity, IDENTITY_SIZE, public_p->hash_type);
+    uint8_t digest[MAX_DIGEST_SIZE];
+    unsigned short digest_len = hash(digest, identity, IDENTITY_SIZE, public_p->hash_type);
 
     // Generating pk for the user
     element_init_G1(pk_id, public_p->pairing);
     element_from_hash(pk_id, digest, digest_len);
-
-    free(digest);
 }
 
 void extract_s(element_t sk_id, sv_secret_params_t secret_p, const sv_identity_t identity)
 {
     // Hashing
-    uint8_t *digest;
-    unsigned short digest_len = hash(&digest, identity, IDENTITY_SIZE, secret_p->public_params->hash_type);
+    uint8_t digest[MAX_DIGEST_SIZE];
+    unsigned short digest_len = hash(digest, identity, IDENTITY_SIZE, secret_p->public_params->hash_type);
 
     // Generating sk for the user
     element_init_G1(sk_id, secret_p->public_params->pairing);
     element_from_hash(sk_id, digest, digest_len);
     element_mul_zn(sk_id, sk_id, secret_p->msk);
-
-    free(digest);
 }
 
 void delegate(delegation_t w, element_t sk, warrant_t m, sv_public_params_t public_p)
@@ -139,6 +133,74 @@ int del_verify(delegation_t w, sv_identity_t identity, sv_public_params_t public
     element_clear(right_el);
 
     return res == 0;
+}
+
+void pk_gen(element_t k_sign, element_t sk, delegation_t w, sv_public_params_t public_p)
+{
+    element_t h;
+    element_init_Zr(h, public_p->pairing);
+    element_init_G1(k_sign, public_p->pairing);
+
+    hash_warrant_and_r(h, w, w->m, public_p->hash_type);
+
+    element_mul_zn(k_sign, sk, h);
+    element_add(k_sign, k_sign, w->S);
+}
+
+void sign(proxy_signature_t p_sig, element_t k_sign, delegation_t w, const uint8_t msg[], sv_public_params_t public_p)
+{
+    element_t k, r_b, v, alpha;
+    element_init_GT(r_b, public_p->pairing);
+    element_init_Zr(k, public_p->pairing);
+    element_init_G1(v, public_p->pairing);
+    element_init_Zr(alpha, public_p->pairing);
+    element_init_Zr(p_sig->V, public_p->pairing);
+    element_init_G1(p_sig->U, public_p->pairing);
+
+    // Random element
+    element_random(k);
+
+    // r_b = e(P, P)^k
+    element_pairing(r_b, public_p->P, public_p->P);
+    element_pow_zn(r_b, r_b, k);
+
+    // v = r * r_b
+    element_mul(v, r_b, w->r);
+
+    // beta = F1(msg) || F2(F1(msg)) (+) msg)
+    uint8_t beta[public_p->l1 + public_p->l2];
+    calculate_beta(beta, msg, public_p);
+
+    // alpha = [beta]_10
+    element_from_bytes(alpha, beta);
+
+    // V = H(v) + alpha
+    int v_size = element_length_in_bytes(v);
+    uint8_t v_buffer[v_size], v_digest[MAX_DIGEST_SIZE];
+    element_to_bytes(v_buffer, v);
+    unsigned short v_digest_size = hash(v_digest, v_buffer, v_size, public_p->hash_type);
+    element_from_hash(p_sig->V, v_digest, v_digest_size);
+    element_add(p_sig->V, p_sig->V, alpha);
+
+    // U = k * P + k_sign
+    element_mul_zn(p_sig->U, public_p->P, k);
+    element_add(p_sig->U, p_sig->U, k_sign);
+}
+
+void calculate_beta(uint8_t beta[], const uint8_t msg[], sv_public_params_t public_p)
+{
+    // beta_lefet = F1(msg)
+    uint8_t beta_left[MAX_DIGEST_SIZE];
+    // beta_right = F2(F1(msg)) (+) msg)
+    hash(beta_left, msg, public_p->l2, public_p->hash_type);
+    uint8_t beta_right[MAX_DIGEST_SIZE];
+    hash(beta_right, msg, public_p->l2, public_p->hash_type);
+    hash(beta_right, beta_right, public_p->l1, public_p->hash_type);
+    for (int i = 0; i < public_p->l2; i++)
+        beta_right[i] = beta_right[i] ^ msg[i];
+    // beta = beta_left || beta_right
+    memcpy(beta, beta_left, public_p->l1);
+    memcpy(beta + public_p->l1, beta_right, public_p->l2);
 }
 
 void public_param_clear(sv_public_params_t public_p)
