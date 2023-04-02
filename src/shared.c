@@ -27,7 +27,7 @@ unsigned short hash(uint8_t digest[MAX_DIGEST_SIZE], const void *data, size_t le
     }
 }
 
-unsigned short hash_element(uint8_t digest[MAX_DIGEST_SIZE], element_t e, hash_type_t hash_type)
+unsigned short hash_element(uint8_t digest[MAX_DIGEST_SIZE], const element_t e, hash_type_t hash_type)
 {
     int len = element_length_in_bytes(e);
     uint8_t element_buffer[len];

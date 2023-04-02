@@ -34,6 +34,6 @@ unsigned short hash(uint8_t digest[MAX_DIGEST_SIZE], const void *data, size_t le
  * @param hash_type hash algorithm to be used
  * @return unsigned short length of the digest in bytes
  */
-unsigned short hash_element(uint8_t digest[MAX_DIGEST_SIZE], element_t e, hash_type_t hash_type);
+unsigned short hash_element(uint8_t digest[MAX_DIGEST_SIZE], const element_t e, hash_type_t hash_type);
 
 #endif // UTIL_H
