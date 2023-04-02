@@ -18,7 +18,8 @@ The project is structured as follows:
 
 ```shell
 .
-├── bin # contains the executable
+├── benchmark # contains the benchmarking scripts
+├── bin # contains the executables
 ├── build # contains the object files
 ├── include # contains the header files
 ├── lib # contains the PBC and utility libraries
@@ -51,12 +52,13 @@ For a more options, use the make command:
 ---------------------------------------------------------------------
  Improved ID-based Proxy Signature Scheme with Message Recovery 0.0.1
 ---------------------------------------------------------------------
- make [help]  - Prints out this help message.
- make compile - Compiles the project.
- make run     - Compiles and runs the project.
- make test    - Compiles the whole test suite and runs it.
- make files   - Prints out the files registered by make.
- make clean   - Cleans up the build directory.
+ make [help]     - Prints out this help message.
+ make compile    - Compiles the project.
+ make run        - Compiles and runs the project.
+ make test       - Compiles the whole test suite and runs it.
+ make benchmarks - Compiles the whole benchmark suite and runs it.
+ make files      - Prints out the files registered by make.
+ make clean      - Cleans up the build directory.
 ---------------------------------------------------------------------
 ```
 
