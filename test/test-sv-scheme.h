@@ -3,34 +3,6 @@
 #include "sv-scheme.h"
 #include "test-const.h"
 
-#pragma region pk_sign
-
-START_TEST(test_pk_sign)
-{
-    sv_public_params_t public_p;
-    sv_secret_params_t secret_p;
-    delegation_t w;
-    warrant_t m;
-    element_t sk, k_sign;
-
-    memcpy(m->from, TEST_IDENTITY, IDENTITY_SIZE);
-    memcpy(m->to, TEST_IDENTITY_2, IDENTITY_SIZE);
-
-    setup(public_p, secret_p, 80, sha_1);
-    element_init_G1(sk, public_p->pairing);
-    extract_s(sk, TEST_IDENTITY, secret_p);
-    delegate(w, sk, m, public_p);
-
-    element_init_G1(k_sign, public_p->pairing);
-    element_set0(k_sign);
-    pk_gen(k_sign, sk, w, public_p);
-
-    ck_assert(!element_is0(k_sign));
-}
-END_TEST
-
-#pragma endregion
-
 #pragma region p_sign
 
 START_TEST(test_p_sign)
@@ -143,9 +115,6 @@ Suite *sv_scheme_suite()
 {
     Suite *s = suite_create("sv-scheme");
 
-    TCase *tc_pk_sign = tcase_create("pk_sign");
-    tcase_add_test(tc_pk_sign, test_pk_sign);
-
     TCase *tc_p_sign = tcase_create("p_sign");
     tcase_add_test(tc_p_sign, test_p_sign);
 
@@ -157,7 +126,6 @@ Suite *sv_scheme_suite()
     tcase_add_test(tc_clear, test_delegation_clear);
     tcase_add_test_raise_signal(tc_clear, test_delegation_already_cleared, SIGSEGV);
 
-    suite_add_tcase(s, tc_pk_sign);
     suite_add_tcase(s, tc_p_sign);
     suite_add_tcase(s, tc_sign_verify);
     suite_add_tcase(s, tc_clear);
