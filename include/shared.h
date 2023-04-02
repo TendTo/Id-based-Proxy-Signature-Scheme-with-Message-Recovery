@@ -199,6 +199,20 @@ void delegate(delegation_t w, element_t sk, warrant_t m, sv_public_params_t publ
 int del_verify(delegation_t w, sv_identity_t identity, sv_public_params_t public_p);
 
 /**
+ * @brief Produces a proxy signing key from a delegation.
+ * If the delegate used accepts the delegation, it can produce a proxy signing key.
+ * It does so by computing the following values:
+ * - h = H1(m, r)
+ * - psk = h * d + S
+ *
+ * @param k_sign proxy signing key to be created.
+ * @param sk secret key of the user who is accepting the delegation.
+ * @param w delegation that validates the proxy signing key.
+ * @param public_p All the public parameters of the scheme.
+ */
+void pk_gen(element_t k_sign, element_t sk, delegation_t w, sv_public_params_t public_p);
+
+/**
  * @brief Clear the public param struct.
  * Makes sure all elements are cleared.
  *

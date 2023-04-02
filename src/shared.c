@@ -210,6 +210,22 @@ int del_verify(delegation_t w, sv_identity_t identity, sv_public_params_t public
     return res == 0;
 }
 
+void pk_gen(element_t k_sign, element_t sk, delegation_t w, sv_public_params_t public_p)
+{
+    element_t h;
+    element_init_Zr(h, public_p->pairing);
+    element_init_G1(k_sign, public_p->pairing);
+
+    // h = H(m, r)
+    hash_warrant_and_r(h, w->r, w->m, public_p->hash_type);
+
+    // k_sig = h * sk + S
+    element_mul_zn(k_sign, sk, h);
+    element_add(k_sign, k_sign, w->S);
+
+    element_clear(h);
+}
+
 void public_param_clear(sv_public_params_t public_p)
 {
     element_clear(public_p->P);
