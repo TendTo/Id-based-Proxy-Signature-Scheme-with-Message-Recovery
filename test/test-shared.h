@@ -48,6 +48,26 @@ END_TEST
 
 #pragma endregion
 
+#pragma region calculate_beta
+
+START_TEST(test_calculate_beta)
+{
+    uint8_t beta[MAX_DIGEST_SIZE];
+    sv_public_params_t public_p;
+    sv_secret_params_t secret_p;
+
+    setup(public_p, secret_p, 80, sha_256);
+    calculate_beta(beta, (uint8_t *)TEST_MESSAGE, strlen(TEST_MESSAGE), public_p);
+
+    for (int i = 0; i < public_p->q; i++)
+    {
+        ck_assert_int_eq(beta[i], TEST_MESSAGE_DIGEST_SHA256[i]);
+    }
+}
+END_TEST
+
+#pragma endregion
+
 #pragma region serialization
 
 START_TEST(test_serialization)
@@ -340,6 +360,9 @@ Suite *utility_suite()
     TCase *tc_hash_element = tcase_create("hash_element");
     tcase_add_loop_test(tc_hash_element, test_hash_element, 0, N_HASH_TYPES);
 
+    TCase *tc_calculate_beta = tcase_create("calculate_beta");
+    tcase_add_test(tc_calculate_beta, test_calculate_beta);
+
     TCase *tc_serialize = tcase_create("serialize");
     tcase_add_test(tc_serialize, test_serialization);
     tcase_add_test(tc_serialize, test_deserialization);
@@ -372,6 +395,7 @@ Suite *utility_suite()
 
     suite_add_tcase(s, tc_hash);
     suite_add_tcase(s, tc_hash_element);
+    suite_add_tcase(s, tc_calculate_beta);
     suite_add_tcase(s, tc_serialize);
     suite_add_tcase(s, tc_setup);
     suite_add_tcase(s, tc_extract);

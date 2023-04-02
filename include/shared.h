@@ -1,6 +1,7 @@
 #ifndef SHARED_H
 #define SHARED_H
 
+#include <string.h>
 #include <assert.h>
 #include <pbc/pbc.h>
 #include <nettle/sha1.h>

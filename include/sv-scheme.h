@@ -1,7 +1,6 @@
 #ifndef SV_SCHEME_H
 #define SV_SCHEME_H
 
-#include <string.h>
 #include <pbc/pbc.h>
 #include <nettle/sha1.h>
 #include "shared.h"
