@@ -11,6 +11,29 @@ ifeq ($(strip $(IS_MAC)$(IS_WIN)$(IS_LNX)),)
 endif
 
 #==============================================================================
+#  FUNCTIONS
+#==============================================================================
+
+define error_handling
+	@if [ -f _error_flag ]; then \
+		echo "$(1)$(RED)$(BOLD)Error$(RESET)"; \
+		cat temp_error_file; \
+		rm -f temp_error_file; \
+		rm -f _error_flag; \
+		rm -f *.o; \
+		false; \
+	else \
+		if [ -s temp_error_file ]; then \
+			echo "$(1)$(YELLOW)$(BOLD)Warning$(RESET)"; \
+			cat temp_error_file; \
+		else \
+			echo "$(1)$(GREEN)$(BOLD)Success$(RESET)"; \
+		fi \
+	fi
+	@rm -f temp_error_file
+endef
+
+#==============================================================================
 #  TARGETS
 #==============================================================================
 
@@ -41,22 +64,7 @@ $(ENTRY_OBJECT) $(SOURCE_OBJECTS): $(ENTRY_FILE) $(SOURCE_FILES) $(HEADER_FILES)
 	@echo "Compiling production code..  "
 	@$(CC) $(CFLAGS) $(LDLIBS) $(CDEFINE) -c $^ \
 	2> temp_error_file; if [ $$? -ne 0 ]; then touch _error_flag; fi; true
-	@if [ -f _error_flag ]; then \
-	  rm -f _error_flag; \
-		echo "$(RED)$(BOLD)Error$(RESET)"; \
-		cat temp_error_file; \
-		rm -f temp_error_file; \
-		echo "$(RED)$(BOLD)Make aborted!$(RESET)"; \
-		false; \
-	else \
-		if [ -s temp_error_file ]; then \
-			echo "$(YELLOW)$(BOLD)Warning$(RESET)"; \
-			cat temp_error_file; \
-		else \
-			echo "$(GREEN)$(BOLD)Done$(RESET)"; \
-		fi \
-	fi
-	@rm -f temp_error_file
+	$(call error_handling)
 	@rm -f $(INC_DIR)/*.gch
 	@mv $(notdir $(SOURCE_OBJECTS) $(ENTRY_OBJECT)) $(OBJ_DIR)
 
@@ -69,22 +77,7 @@ $(TEST_ENTRY_OBJECT) $(TEST_SOURCE_OBJECTS): $(TEST_ENTRY_FILE) $(TEST_SOURCE_FI
 	@echo "Compiling test code..  "
 	@$(CC) $(TEST_CFLAGS) $(TEST_LDLIBS) $(TEST_CDEFINE) -c $^ \
 	2> temp_error_file; if [ $$? -ne 0 ]; then touch _error_flag; fi; true
-	@if [ -f _error_flag ]; then \
-	  rm -f _error_flag; \
-		echo "$(RED)$(BOLD)Error$(RESET)"; \
-		cat temp_error_file; \
-		rm -f temp_error_file; \
-		echo "$(RED)$(BOLD)Make aborted!$(RESET)"; \
-		false; \
-	else \
-		if [ -s temp_error_file ]; then \
-			echo "$(YELLOW)$(BOLD)Warning$(RESET)"; \
-			cat temp_error_file; \
-		else \
-			echo "$(GREEN)$(BOLD)Done$(RESET)"; \
-		fi \
-	fi
-	@rm -f temp_error_file
+	@$(call error_handling)
 	@mv $(notdir $(TEST_SOURCE_OBJECTS) $(TEST_ENTRY_OBJECT)) $(OBJ_DIR)
 
 test_compile: $(OBJ_DIR) $(BIN_DIR) $(TEST_ENTRY_OBJECT)
@@ -94,21 +87,7 @@ test: test_compile
 	@echo "Testing...  $(YELLOW)$(BOLD)Start$(RESET)"
 	@./$(BIN_DIR)/$(TEST_BINARY) \
 	2> temp_error_file; if [ $$? -ne 0 ]; then touch _error_flag; fi; true
-	@if [ -f _error_flag ]; then \
-	  rm -f _error_flag; \
-		echo "Testing...  $(RED)$(BOLD)Error$(RESET)"; \
-		cat temp_error_file; \
-		rm -f temp_error_file; \
-		false; \
-	else \
-		if [ -s temp_error_file ]; then \
-			echo "Testing...  $(YELLOW)$(BOLD)Warning$(RESET)"; \
-			cat temp_error_file; \
-		else \
-			echo "Testing...  $(GREEN)$(BOLD)Success$(RESET)"; \
-		fi \
-	fi
-	@rm -f temp_error_file
+	$(call error_handling, "Testing... ")
 
 #==============================================================================
 #  BENCHMARK TARGETS
@@ -119,22 +98,7 @@ $(BENCH_ENTRY_OBJECT) $(BENCH_SOURCE_OBJECTS): $(BENCH_ENTRY_FILE) $(BENCH_SOURC
 	@echo "Compiling benchmark code..  "
 	@$(CC) $(BENCH_CFLAGS) $(BENCH_LDLIBS) $(BENCH_CDEFINE) -c $^ \
 	2> temp_error_file; if [ $$? -ne 0 ]; then touch _error_flag; fi; true
-	@if [ -f _error_flag ]; then \
-	  rm -f _error_flag; \
-		echo "$(RED)$(BOLD)Error$(RESET)"; \
-		cat temp_error_file; \
-		rm -f temp_error_file; \
-		echo "$(RED)$(BOLD)Make aborted!$(RESET)"; \
-		false; \
-	else \
-		if [ -s temp_error_file ]; then \
-			echo "$(YELLOW)$(BOLD)Warning$(RESET)"; \
-			cat temp_error_file; \
-		else \
-			echo "$(GREEN)$(BOLD)Done$(RESET)"; \
-		fi \
-	fi
-	@rm -f temp_error_file
+	@$(call error_handling)
 	@mv $(notdir $(BENCH_SOURCE_OBJECTS) $(BENCH_ENTRY_OBJECT)) $(OBJ_DIR)
 
 benchmark_compile: compile $(BENCH_ENTRY_OBJECT)
@@ -143,22 +107,8 @@ benchmark_compile: compile $(BENCH_ENTRY_OBJECT)
 benchmark: benchmark_compile
 	@echo "Benchmarking...  $(YELLOW)$(BOLD)Start$(RESET)"
 	@./$(BIN_DIR)/$(BENCH_BINARY) \
-	2> temp_bench_file; if [ $$? -ne 0 ]; then touch _error_flag; fi; true
-	@if [ -f _error_flag ]; then \
-	  rm -f _error_flag; \
-		echo "Benchmarking...  $(RED)$(BOLD)Error$(RESET)"; \
-		cat temp_bench_file; \
-		rm -f temp_bench_file; \
-		false; \
-	else \
-		if [ -s temp_bench_file ]; then \
-			echo "Benchmarking...  $(YELLOW)$(BOLD)Warning$(RESET)"; \
-			cat temp_bench_file; \
-		else \
-			echo "Benchmarking...  $(GREEN)$(BOLD)Success$(RESET)"; \
-		fi \
-	fi
-	@rm -f temp_bench_file
+	2> temp_error_file; if [ $$? -ne 0 ]; then touch _error_flag; fi; true
+	$(call error_handling, "Benchmarking... ")
 
 #==============================================================================
 #  UTILITY TARGETS
@@ -216,4 +166,3 @@ files:
 	@echo ' $(BLUE)$(BOLD)Benchmark binary$(RESET)'
 	@echo '   $(BOLD)Binary$(RESET):    $(BIN_DIR)/$(BENCH_BINARY)'
 	@echo ' '
-
