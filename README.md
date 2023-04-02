@@ -45,6 +45,21 @@ Once it has been compiled, the project can be run by executing the following com
 ./run.sh <params>
 ```
 
+For a more options, use the make command:
+
+```shell
+---------------------------------------------------------------------
+ Improved ID-based Proxy Signature Scheme with Message Recovery 0.0.1
+---------------------------------------------------------------------
+ make [help]  - Prints out this help message.
+ make compile - Compiles the project.
+ make run     - Compiles and runs the project.
+ make test    - Compiles the whole test suite and runs it.
+ make files   - Prints out the files registered by make.
+ make clean   - Cleans up the build directory.
+---------------------------------------------------------------------
+```
+
 ## References
 
 - [An Improved ID-based Proxy Signature Scheme with Message Recovery](https://www.researchgate.net/publication/283648628_An_Improved_ID-based_Proxy_Signature_Scheme_with_Message_Recovery)
