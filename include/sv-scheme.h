@@ -228,4 +228,20 @@ void public_param_clear(sv_public_params_t public_p);
  */
 void secret_param_clear(sv_secret_params_t secret_p);
 
+/**
+ * @brief Clear the warrant struct.
+ * Make sure all elements are cleared.
+ *
+ * @param w Warrant to be cleared.
+ */
+void delegation_clear(delegation_t w);
+
+/**
+ * @brief Clear the proxy signature struct.
+ * Make sure all elements are cleared.
+ *
+ * @param p_sig Proxy signature to be cleared.
+ */
+void proxy_signature_clear(proxy_signature_t p_sig);
+
 #endif // SV_SCHEME_H
