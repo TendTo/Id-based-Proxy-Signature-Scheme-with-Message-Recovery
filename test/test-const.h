@@ -16,6 +16,7 @@
 
 #define N_SEC_LEVELS 2
 #define N_HASH_TYPES 3
+#define TEST_MESSAGE "Sign this message!"
 
 // Security levels
 const int sec_levels[N_SEC_LEVELS] = {80, 128};

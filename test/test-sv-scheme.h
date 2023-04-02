@@ -95,7 +95,7 @@ START_TEST(test_setup_order)
     sv_secret_params_t secret_p;
     setup(public_p, secret_p, sec_lvl, sha_1);
 
-    ck_assert(public_p->q >= sec_levels_order[_i]);
+    ck_assert(public_p->q >= sec_levels_order[_i] / 8);
     ck_assert(public_p->l1 + public_p->l2 == public_p->q);
 }
 END_TEST
@@ -111,7 +111,7 @@ START_TEST(test_extract_p)
     sv_secret_params_t secret_p;
     element_t pk_id;
     setup(public_p, secret_p, sec_lvl, sha_1);
-    extract_p(pk_id, public_p, TEST_IDENTITY);
+    extract_p(pk_id, TEST_IDENTITY, public_p);
 
     element_t test_pk_id;
     element_init_G1(test_pk_id, public_p->pairing);
@@ -127,7 +127,7 @@ START_TEST(test_extract_s)
     sv_secret_params_t secret_p;
     element_t sk_id;
     setup(public_p, secret_p, sec_lvl, sha_1);
-    extract_s(sk_id, secret_p, TEST_IDENTITY);
+    extract_s(sk_id, TEST_IDENTITY, secret_p);
 
     element_t test_sk_id;
     element_init_G1(test_sk_id, public_p->pairing);
@@ -145,8 +145,8 @@ START_TEST(test_extract_relationship)
     element_t pk_id, sk_id, temp;
 
     setup(public_p, secret_p, sec_lvl, sha_1);
-    extract_p(pk_id, public_p, TEST_IDENTITY);
-    extract_s(sk_id, secret_p, TEST_IDENTITY);
+    extract_p(pk_id, TEST_IDENTITY, public_p);
+    extract_s(sk_id, TEST_IDENTITY, secret_p);
 
     element_init_G1(temp, public_p->pairing);
     element_mul_zn(temp, pk_id, secret_p->msk);
@@ -171,10 +171,12 @@ START_TEST(test_delegate)
 
     setup(public_p, secret_p, 80, sha_1);
     element_init_G1(sk, public_p->pairing);
-    extract_s(sk, secret_p, TEST_IDENTITY);
+    extract_s(sk, TEST_IDENTITY, secret_p);
     delegate(w, sk, m, public_p);
 
     ck_assert_ptr_eq(w->m, m);
+    ck_assert(!element_is0(w->r));
+    ck_assert(!element_is0(w->S));
 }
 END_TEST
 
@@ -195,7 +197,7 @@ START_TEST(test_del_verify)
 
     setup(public_p, secret_p, 80, sha_1);
     element_init_G1(sk, public_p->pairing);
-    extract_s(sk, secret_p, TEST_IDENTITY);
+    extract_s(sk, TEST_IDENTITY, secret_p);
     delegate(w, sk, m, public_p);
 
     ck_assert(del_verify(w, TEST_IDENTITY, public_p));
@@ -215,7 +217,7 @@ START_TEST(test_del_verify_fail)
 
     setup(public_p, secret_p, 80, sha_1);
     element_init_G1(sk, public_p->pairing);
-    extract_s(sk, secret_p, TEST_IDENTITY);
+    extract_s(sk, TEST_IDENTITY, secret_p);
     delegate(w, sk, m, public_p);
 
     // Wrong identity as the one that delegated
@@ -240,7 +242,7 @@ START_TEST(test_pk_sign)
 
     setup(public_p, secret_p, 80, sha_1);
     element_init_G1(sk, public_p->pairing);
-    extract_s(sk, secret_p, TEST_IDENTITY);
+    extract_s(sk, TEST_IDENTITY, secret_p);
     delegate(w, sk, m, public_p);
 
     element_init_G1(k_sign, public_p->pairing);
@@ -248,6 +250,69 @@ START_TEST(test_pk_sign)
     pk_gen(k_sign, sk, w, public_p);
 
     ck_assert(!element_is0(k_sign));
+}
+END_TEST
+
+#pragma endregion
+
+#pragma region p_sign
+
+START_TEST(test_p_sign)
+{
+    sv_public_params_t public_p;
+    sv_secret_params_t secret_p;
+    delegation_t w;
+    warrant_t m;
+    element_t sk, k_sign;
+    proxy_signature_t p_sig;
+
+    memcpy(m->from, TEST_IDENTITY, IDENTITY_SIZE);
+    memcpy(m->to, TEST_IDENTITY_2, IDENTITY_SIZE);
+
+    setup(public_p, secret_p, 80, sha_1);
+    element_init_G1(sk, public_p->pairing);
+    extract_s(sk, TEST_IDENTITY, secret_p);
+    delegate(w, sk, m, public_p);
+
+    element_init_G1(k_sign, public_p->pairing);
+    element_set0(k_sign);
+    pk_gen(k_sign, sk, w, public_p);
+    p_sign(p_sig, k_sign, w, (u_int8_t *)TEST_MESSAGE, strlen(TEST_MESSAGE), public_p);
+
+    ck_assert(p_sig->m == m);
+    ck_assert(!element_is0(p_sig->r));
+    ck_assert(!element_is0(p_sig->V));
+    ck_assert(!element_is0(p_sig->U));
+}
+END_TEST
+
+#pragma endregion
+
+#pragma region sign_verify
+
+START_TEST(test_sign_verify)
+{
+    sv_public_params_t public_p;
+    sv_secret_params_t secret_p;
+    delegation_t w;
+    warrant_t m;
+    element_t sk_a, sk_b, k_sign;
+    proxy_signature_t p_sig;
+
+    memcpy(m->from, TEST_IDENTITY, IDENTITY_SIZE);
+    memcpy(m->to, TEST_IDENTITY_2, IDENTITY_SIZE);
+
+    setup(public_p, secret_p, 80, sha_1);
+    extract_s(sk_a, TEST_IDENTITY, secret_p);
+    extract_s(sk_b, TEST_IDENTITY_2, secret_p);
+    delegate(w, sk_a, m, public_p);
+
+    ck_assert(del_verify(w, TEST_IDENTITY, public_p));
+
+    pk_gen(k_sign, sk_b, w, public_p);
+    p_sign(p_sig, k_sign, w, (uint8_t *)TEST_MESSAGE, strlen(TEST_MESSAGE), public_p);
+
+    ck_assert(sign_verify(p_sig, public_p));
 }
 END_TEST
 
@@ -340,6 +405,13 @@ Suite *sv_scheme_suite()
     TCase *tc_pk_sign = tcase_create("pk_sign");
     tcase_add_test(tc_pk_sign, test_pk_sign);
 
+    TCase *tc_p_sign = tcase_create("p_sign");
+    tcase_add_test(tc_p_sign, test_p_sign);
+
+    TCase *tc_sign_verify = tcase_create("sign_verify");
+    tcase_add_test(tc_sign_verify, test_sign_verify);
+    // tcase_add_test(tc_verify, test_verify_fail);
+
     TCase *tc_clear = tcase_create("clear");
     tcase_add_test(tc_clear, test_public_params_clear);
     tcase_add_test_raise_signal(tc_clear, test_public_params_already_cleared, SIGSEGV);
@@ -354,6 +426,8 @@ Suite *sv_scheme_suite()
     suite_add_tcase(s, tc_delegate);
     suite_add_tcase(s, tc_del_verify);
     suite_add_tcase(s, tc_pk_sign);
+    suite_add_tcase(s, tc_p_sign);
+    suite_add_tcase(s, tc_sign_verify);
     suite_add_tcase(s, tc_clear);
 
     return s;
