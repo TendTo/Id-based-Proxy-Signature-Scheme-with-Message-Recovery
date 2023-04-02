@@ -86,11 +86,11 @@ unsigned short deserialize_warrant(warrant_t m, const uint8_t buffer[WARRANT_SIZ
  * @warning h must be initialized before calling this function.
  *
  * @param h element of Zq* where the hash is stored.
- * @param w delegation which contains the value r that will be hashed.
+ * @param r element r that will be hashed.
  * @param m warrant to be hashed.
  * @param hash_type hash algorithm to be used.
  */
-void hash_warrant_and_r(element_t h, delegation_t w, warrant_t m, hash_type_t hash_type);
+void hash_warrant_and_r(element_t h, element_t r, warrant_t m, hash_type_t hash_type);
 
 /**
  * @brief Calculate the value of beta.
@@ -99,9 +99,10 @@ void hash_warrant_and_r(element_t h, delegation_t w, warrant_t m, hash_type_t ha
  *
  * @param beta output of the hash function.
  * @param msg message to be hashed.
+ * @param msg_size size of the message to be signed in bytes.
  * @param public_p public parameters of the scheme.
  */
-void calculate_beta(uint8_t beta[], const uint8_t msg[], sv_public_params_t public_p);
+void calculate_beta(uint8_t beta[], const uint8_t msg[], size_t msg_size, sv_public_params_t public_p);
 
 /**
  * @brief Initialization function for the scheme.
@@ -121,10 +122,10 @@ void setup(sv_public_params_t public_p, sv_secret_params_t secret_p, int sec_lvl
  * to an element of G1: pk_id = H0(identity).
  *
  * @param pk_id Public key created for the user from their identifier.
- * @param public_p All the public parameters of the scheme.
  * @param identity Identity of the user of IDENTITY_SIZE bytes.
+ * @param public_p All the public parameters of the scheme.
  */
-void extract_p(element_t pk_id, sv_public_params_t public_p, const sv_identity_t identity);
+void extract_p(element_t pk_id, const sv_identity_t identity, sv_public_params_t public_p);
 
 /**
  * @brief Produces the secret key sk_id from an identity.
@@ -133,10 +134,10 @@ void extract_p(element_t pk_id, sv_public_params_t public_p, const sv_identity_t
  * Then multiplies the master key sk with the result of the hash function: sk_id = sk * H0(identity).
  *
  * @param pk_id Private key created for the user from their identifier.
- * @param secret_p All the secret parameters of the user.
  * @param identity Identity of the user of IDENTITY_SIZE bytes.
+ * @param secret_p All the secret parameters of the user.
  */
-void extract_s(element_t sk_id, sv_secret_params_t secret_p, const sv_identity_t identity);
+void extract_s(element_t sk_id, const sv_identity_t identity, sv_secret_params_t secret_p);
 
 /**
  * @brief Delegates the right to sign messages to the identity id.
@@ -177,7 +178,7 @@ int del_verify(delegation_t w, sv_identity_t identity, sv_public_params_t public
  * - psk = h * d + S
  *
  * @param k_sign proxy signing key to be created.
- * @param sk secret key of the user who is accepting the signature.
+ * @param sk secret key of the user who is accepting the delegation.
  * @param w delegation that validates the proxy signing key.
  * @param public_p All the public parameters of the scheme.
  */
@@ -193,17 +194,23 @@ void pk_gen(element_t k_sign, element_t sk, delegation_t w, sv_public_params_t p
  * - Vb = H2(v) + alpha
  * - U = k * P + d
  *
- * @param message message to sign
+ * @param p_sig proxy signature to be created.
+ * @param k_sign proxy signing key of the proxy signer.
+ * @param w delegation from the original user to the proxy signer that validates the proxy signing key.
+ * @param msg message to be signed.
+ * @param msg_size size of the message to be signed in bytes.
+ * @param public_p All the public parameters of the scheme.
  */
-void p_sign(char *message);
+void p_sign(proxy_signature_t p_sig, element_t k_sign, delegation_t w, const uint8_t msg[], size_t msg_size, sv_public_params_t public_p);
 
 /**
  * @brief Checks if the proxy signature is valid.
  * If so, the original message m is returned.
  *
  * @param ps proxy signature to be verified.
+ * @param public_p All the public parameters of the scheme.
  */
-void sign_verify(proxy_signature_t p_sig);
+unsigned short sign_verify(proxy_signature_t p_sig, sv_public_params_t public_p);
 
 /**
  * @brief Clear the public param struct.
