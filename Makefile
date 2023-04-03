@@ -64,7 +64,7 @@ $(ENTRY_OBJECT) $(SOURCE_OBJECTS): $(ENTRY_FILE) $(SOURCE_FILES) $(HEADER_FILES)
 	@echo "Compiling production code..  "
 	@$(CC) $(CFLAGS) $(LDLIBS) $(CDEFINE) -c $^ \
 	2> temp_error_file; if [ $$? -ne 0 ]; then touch _error_flag; fi; true
-	$(call error_handling)
+	$(call error_handling, "Compiling source code...  ")
 	@rm -f $(INC_DIR)/*.gch
 	@mv $(notdir $(SOURCE_OBJECTS) $(ENTRY_OBJECT)) $(OBJ_DIR)
 
@@ -77,11 +77,13 @@ $(TEST_ENTRY_OBJECT) $(TEST_SOURCE_OBJECTS): $(TEST_ENTRY_FILE) $(TEST_SOURCE_FI
 	@echo "Compiling test code..  "
 	@$(CC) $(TEST_CFLAGS) $(TEST_LDLIBS) $(TEST_CDEFINE) -c $^ \
 	2> temp_error_file; if [ $$? -ne 0 ]; then touch _error_flag; fi; true
-	@$(call error_handling)
+	@$(call error_handling, "Compiling test code...  ")
 	@mv $(notdir $(TEST_SOURCE_OBJECTS) $(TEST_ENTRY_OBJECT)) $(OBJ_DIR)
 
 test_compile: compile $(OBJ_DIR) $(BIN_DIR) $(TEST_ENTRY_OBJECT)
-	@$(CC) $(TEST_ENTRY_FILE) $(SOURCE_OBJECTS) $(TEST_SOURCE_OBJECTS) -o $(BIN_DIR)/$(TEST_BINARY) $(TEST_CFLAGS) $(TEST_LDLIBS) $(TEST_CDEFINE)
+	@$(CC) $(TEST_ENTRY_FILE) $(SOURCE_OBJECTS) $(TEST_SOURCE_OBJECTS) -o $(BIN_DIR)/$(TEST_BINARY) $(TEST_CFLAGS) $(TEST_LDLIBS) $(TEST_CDEFINE) \
+	2> temp_error_file; if [ $$? -ne 0 ]; then touch _error_flag; fi; true
+	@$(call error_handling, "Compiling test binary...  ")
 
 test: test_compile
 	@echo "Testing...  $(YELLOW)$(BOLD)Start$(RESET)"
@@ -98,11 +100,13 @@ $(BENCH_ENTRY_OBJECT) $(BENCH_SOURCE_OBJECTS): $(BENCH_ENTRY_FILE) $(BENCH_SOURC
 	@echo "Compiling benchmark code..  "
 	@$(CC) $(BENCH_CFLAGS) $(BENCH_LDLIBS) $(BENCH_CDEFINE) -c $^ \
 	2> temp_error_file; if [ $$? -ne 0 ]; then touch _error_flag; fi; true
-	@$(call error_handling)
+	@$(call error_handling, "Compiling benchmark code...  ") 
 	@mv $(notdir $(BENCH_SOURCE_OBJECTS) $(BENCH_ENTRY_OBJECT)) $(OBJ_DIR)
 
 benchmark_compile: compile $(BENCH_ENTRY_OBJECT)
-	@$(CC) $(BENCH_ENTRY_FILE) $(SOURCE_OBJECTS) $(BENCH_SOURCE_OBJECTS) -o $(BIN_DIR)/$(BENCH_BINARY) $(BENCH_CFLAGS) $(BENCH_LDLIBS) $(BENCH_CDEFINE)
+	@$(CC) $(BENCH_ENTRY_FILE) $(SOURCE_OBJECTS) $(BENCH_SOURCE_OBJECTS) -o $(BIN_DIR)/$(BENCH_BINARY) $(BENCH_CFLAGS) $(BENCH_LDLIBS) $(BENCH_CDEFINE) \
+	2> temp_error_file; if [ $$? -ne 0 ]; then touch _error_flag; fi; true
+	@$(call error_handling, "Compiling benchmark binary...  ")
 
 benchmark: benchmark_compile
 	@echo "Benchmarking...  $(YELLOW)$(BOLD)Start$(RESET)"
