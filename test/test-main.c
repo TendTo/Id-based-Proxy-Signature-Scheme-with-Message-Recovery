@@ -2,12 +2,13 @@
 #include "test-const.h"
 #include "test-shared.h"
 #include "test-sv-scheme.h"
+#include "test-imp-sv-scheme.h"
 
-#define NSUITE 2
+#define NSUITE 3
 
 int main()
 {
-    Suite *(*suite_creators[NSUITE])(void) = {utility_suite, sv_scheme_suite};
+    Suite *(*suite_creators[NSUITE])(void) = {utility_suite, sv_scheme_suite, imp_sv_scheme_suite};
 
     int no_failed = 0;
     Suite *s;
