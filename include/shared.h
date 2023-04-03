@@ -60,6 +60,16 @@ struct delegation_struct
 typedef struct delegation_struct *delegation_ptr;
 typedef struct delegation_struct delegation_t[1];
 
+struct proxy_signature_struct
+{
+    warrant_ptr m; // Warrant of the delegation.
+    element_t r;   // r value used to verify the signature (in GT).
+    element_t V;   // V value used to verify the signature (in Zr).
+    element_t U;   // U value used to verify the signature (in G1).
+};
+typedef struct proxy_signature_struct *proxy_signature_ptr;
+typedef struct proxy_signature_struct proxy_signature_t[1];
+
 /**
  * @brief Get the size of the non generic dlog secure size based on the NIST suggestions.
  *
@@ -235,5 +245,13 @@ void secret_param_clear(sv_secret_params_t secret_p);
  * @param w Warrant to be cleared.
  */
 void delegation_clear(delegation_t w);
+
+/**
+ * @brief Clear the proxy signature struct.
+ * Make sure all elements are cleared.
+ *
+ * @param p_sig Proxy signature to be cleared.
+ */
+void proxy_signature_clear(proxy_signature_t p_sig);
 
 #endif // SHARED_H

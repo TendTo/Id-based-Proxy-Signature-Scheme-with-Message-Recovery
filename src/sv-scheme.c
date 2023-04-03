@@ -116,10 +116,3 @@ unsigned short sign_verify(proxy_signature_t p_sig, sv_public_params_t public_p)
 
     return res == 0;
 }
-
-void proxy_signature_clear(proxy_signature_t p_sig)
-{
-    element_clear(p_sig->r);
-    element_clear(p_sig->U);
-    element_clear(p_sig->V);
-}

@@ -243,3 +243,10 @@ void delegation_clear(delegation_t w)
     element_clear(w->r);
     element_clear(w->S);
 }
+
+void proxy_signature_clear(proxy_signature_t p_sig)
+{
+    element_clear(p_sig->r);
+    element_clear(p_sig->U);
+    element_clear(p_sig->V);
+}
