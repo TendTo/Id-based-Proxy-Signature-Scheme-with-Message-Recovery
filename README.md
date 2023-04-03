@@ -64,8 +64,8 @@ For a more options, use the make command:
 
 > **Warning**  
 > When using either the `make dynamic`, `make static`, `make test` or `make benchmarks` commands, the source code will be compiled with the custom options of the specified target.  
-> If the sources have not changed, the objects may not be compiled at all.  
-> If you need to add or remote those compiler flags, it is advised to run the `make clean` command first.
+> If the object are already present and the sources have not changed, there may not be any compile step.  
+> To make sure the sources are compiled with the right flags, meaning every time the make target changes, it is advised to run the `make clean` command first.
 
 ### Dynamic library
 
