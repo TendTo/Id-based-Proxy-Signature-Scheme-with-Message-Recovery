@@ -1,7 +1,7 @@
 # Id based Proxy Signature Scheme with Message Recovery
 
-This is a prototype implementation of the Id based Proxy Signature Scheme with Message Recovery as described in the paper [1].
-The implementation is written in [c](<https://en.wikipedia.org/wiki/C_(programming_language)>) and uses the [PBC](https://crypto.stanford.edu/pbc/) library, with the help of some utilities provided by the professor [Mario di Raimondo](https://diraimondo.dmi.unict.it/).
+This is a prototype implementation of the Id based Proxy Signature Scheme with Message Recovery as described in the [paper](https://www.researchgate.net/publication/283648628_An_Improved_ID-based_Proxy_Signature_Scheme_with_Message_Recovery).  
+The implementation is written in [c](<https://en.wikipedia.org/wiki/C_(programming_language)>) and uses the [PBC](https://crypto.stanford.edu/pbc/) and [Nettle](http://www.lysator.liu.se/~nisse/nettle/) libraries, with the help of some utilities provided by the professor [Mario di Raimondo](https://diraimondo.dmi.unict.it/).
 
 ## Requirements
 
@@ -62,8 +62,14 @@ For a more options, use the make command:
 ---------------------------------------------------------------------
 ```
 
+## Documentation
+
+For more information regarding the cryptographic primitives used in this project, please refer to the original papers.  
+A slightly more in depth explanation can be found in the [docs folder](docs/README.md).
+
 ## References
 
+- [ID-based proxy signature scheme with message recovery](https://www.sciencedirect.com/science/article/abs/pii/S0164121211002159)
 - [An Improved ID-based Proxy Signature Scheme with Message Recovery](https://www.researchgate.net/publication/283648628_An_Improved_ID-based_Proxy_Signature_Scheme_with_Message_Recovery)
 - [PBC](https://crypto.stanford.edu/pbc/)
 - [Mario di Raimondo](https://diraimondo.dmi.unict.it/)
