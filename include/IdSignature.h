@@ -13,7 +13,19 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <unistd.h>
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include "define.h"
 #include "sv-scheme.h"
+#include "imp-sv-scheme.h"
+#include "shared.h"
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
