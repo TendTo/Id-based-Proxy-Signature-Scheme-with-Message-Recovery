@@ -79,23 +79,21 @@ int main(int argc, char *argv[])
     }
 
     printf("Benchmarking...\n");
-    bench_setup(bench_p);
-    bench_extract_p(bench_p);
-    bench_extract_s(bench_p);
-    bench_delegate(bench_p);
-    bench_del_verify(bench_p);
 
+    bench_shared(bench_p);
+    bench_sv(bench_p);
+    bench_imp_sv(bench_p);
     return 0;
 }
 
 void printf_params(bench_param_t bench_p)
 {
-    printf("---------------------------------------------------------------------\n");
+    printf(SEPARATOR);
     printf("Benchmark parameters:\n");
     printf("\tMax samples: %ld\n", bench_p->max_samples);
     printf("\tMax sampling time: %ld\n", bench_p->max_sampling_time);
     printf("\tSecurity level: %d\n", bench_p->sec_lvl);
     printf("\tHash type: %s\n", bench_p->hash_type == sha_1 ? "sha1" : bench_p->hash_type == sha_256 ? "sha256"
                                                                                                      : "sha512");
-    printf("---------------------------------------------------------------------\n");
+    printf(SEPARATOR);
 }

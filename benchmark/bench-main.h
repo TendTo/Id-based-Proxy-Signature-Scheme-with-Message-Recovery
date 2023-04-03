@@ -5,7 +5,8 @@
 #include <getopt.h>
 #include "bench-const.h"
 #include "bench-sv.h"
-#include "bench-const.h"
+#include "bench-imp-sv.h"
+#include "bench-shared.h"
 
 #define DEFAULT_SEC_LVL 80
 #define DEFAULT_MAX_SAMPLING_TIME 4

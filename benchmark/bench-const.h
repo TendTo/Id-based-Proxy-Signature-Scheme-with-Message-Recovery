@@ -4,6 +4,8 @@
 #include "lib-timing.h"
 #include "shared.h"
 
+#define SEPARATOR "---------------------------------------------------------------------\n"
+
 // Usage tooltip
 #define BENCH_USAGE \
     "Usage: %s \n\
@@ -11,10 +13,10 @@ Use -h to know more informations\n"
 
 // Help tooltip
 #define BENCH_HELP_TOOLTIP \
-    "---------------------------------------------------------------------\n\
+    "" SEPARATOR "\
 " PROJECT_NAME " benchmarks, version " VERSION "\n\
 Usage: %s \n\
----------------------------------------------------------------------\n\
+" SEPARATOR "\
 -h   -  shows the help tooltip\n\
 -v   -  use verbose output\n\
 -a   -  hash algorithm [sha1, sha256, sha512] (sha1)\n\

@@ -66,10 +66,6 @@ END_TEST
 
 #pragma endregion
 
-#pragma region clean
-
-#pragma endregion
-
 Suite *imp_sv_scheme_suite()
 {
     Suite *s = suite_create("imp-sv-scheme");
