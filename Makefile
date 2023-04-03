@@ -37,7 +37,7 @@ endef
 #  TARGETS
 #==============================================================================
 
-.PHONY: test_compile test clean files help compile run benchmark_compile benchmark
+.PHONY: test_compile test clean files help compile run benchmark_compile benchmark static dynamic
 
 help:
 	@echo "---------------------------------------------------------------------"
@@ -57,7 +57,9 @@ help:
 
 # Compile the whole project
 compile: $(OBJ_DIR) $(BIN_DIR) $(ENTRY_OBJECT)
-	@cc -o $(BIN_DIR)/$(BINARY) $(ENTRY_OBJECT) $(SOURCE_OBJECTS) $(CFLAGS) $(CDEFINE) $(LDLIBS)
+	@cc -o $(BIN_DIR)/$(BINARY) $(ENTRY_OBJECT) $(SOURCE_OBJECTS) $(CFLAGS) $(CDEFINE) $(LDLIBS) \
+	2> temp_error_file; if [ $$? -ne 0 ]; then touch _error_flag; fi; true
+	$(call error_handling, "Compiling project...  ")
 
 # Compiling the object files
 $(ENTRY_OBJECT) $(SOURCE_OBJECTS): $(ENTRY_FILE) $(SOURCE_FILES) $(HEADER_FILES)
@@ -67,6 +69,24 @@ $(ENTRY_OBJECT) $(SOURCE_OBJECTS): $(ENTRY_FILE) $(SOURCE_FILES) $(HEADER_FILES)
 	$(call error_handling, "Compiling source code...  ")
 	@rm -f $(INC_DIR)/*.gch
 	@mv $(notdir $(SOURCE_OBJECTS) $(ENTRY_OBJECT)) $(OBJ_DIR)
+
+#==============================================================================
+#  LIBRARY TARGETS
+#==============================================================================
+
+# Compiling the dynamic library
+dynamic: CFLAGS = $(DYN_CFLAGS)
+dynamic: LDLIBS = $(DYN_LDLIBS)
+dynamic: CDEFINE = $(DYN_CDEFINE)
+dynamic: $(OBJ_DIR) $(BIN_DIR) $(SOURCE_OBJECTS)
+	$(CC) -shared -o $(BIN_DIR)/$(DYN_BINARY) $(SOURCE_OBJECTS) $(DYN_CFLAGS) $(DYN_LDLIBS) $(DYN_CDEFINE)
+
+# Compiling the static library
+static: CFLAGS = $(STAT_CFLAGS)
+static: LDLIBS = $(STAT_LDLIBS)
+static: CDEFINE = $(STAT_CDEFINE)
+static: $(OBJ_DIR) $(BIN_DIR) $(SOURCE_OBJECTS)
+	@ar rcs $(BIN_DIR)/$(STAT_BINARY) $(SOURCE_OBJECTS)
 
 #==============================================================================
 #  TEST TARGETS
@@ -80,6 +100,9 @@ $(TEST_ENTRY_OBJECT) $(TEST_SOURCE_OBJECTS): $(TEST_ENTRY_FILE) $(TEST_SOURCE_FI
 	@$(call error_handling, "Compiling test code...  ")
 	@mv $(notdir $(TEST_SOURCE_OBJECTS) $(TEST_ENTRY_OBJECT)) $(OBJ_DIR)
 
+test_compile: CFLAGS = $(TEST_CFLAGS)
+test_compile: LDLIBS = $(TEST_LDLIBS)
+test_compile: CDEFINE = $(TEST_CDEFINE)
 test_compile: compile $(OBJ_DIR) $(BIN_DIR) $(TEST_ENTRY_OBJECT)
 	@$(CC) $(TEST_ENTRY_FILE) $(SOURCE_OBJECTS) $(TEST_SOURCE_OBJECTS) -o $(BIN_DIR)/$(TEST_BINARY) $(TEST_CFLAGS) $(TEST_LDLIBS) $(TEST_CDEFINE) \
 	2> temp_error_file; if [ $$? -ne 0 ]; then touch _error_flag; fi; true
@@ -103,6 +126,9 @@ $(BENCH_ENTRY_OBJECT) $(BENCH_SOURCE_OBJECTS): $(BENCH_ENTRY_FILE) $(BENCH_SOURC
 	@$(call error_handling, "Compiling benchmark code...  ") 
 	@mv $(notdir $(BENCH_SOURCE_OBJECTS) $(BENCH_ENTRY_OBJECT)) $(OBJ_DIR)
 
+benchmark_compile: CFLAGS = $(BENCH_CFLAGS)
+benchmark_compile: LDLIBS = $(BENCH_LDLIBS)
+benchmark_compile: CDEFINE = $(BENCH_CDEFINE)
 benchmark_compile: compile $(BENCH_ENTRY_OBJECT)
 	@$(CC) $(BENCH_ENTRY_FILE) $(SOURCE_OBJECTS) $(BENCH_SOURCE_OBJECTS) -o $(BIN_DIR)/$(BENCH_BINARY) $(BENCH_CFLAGS) $(BENCH_LDLIBS) $(BENCH_CDEFINE) \
 	2> temp_error_file; if [ $$? -ne 0 ]; then touch _error_flag; fi; true

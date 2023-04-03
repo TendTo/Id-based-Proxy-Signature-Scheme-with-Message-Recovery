@@ -79,7 +79,7 @@ void calculate_beta(uint8_t beta[], const uint8_t raw_msg[], size_t msg_size, sv
 {
     // make sure the msg length is l2 and the last bytes are 0
     uint8_t msg[public_p->l2];
-    if (msg_size >= public_p->l2)
+    if (msg_size >= (size_t)public_p->l2)
         msg_size = public_p->l2;
     else
         memset(msg, 0, public_p->l2);

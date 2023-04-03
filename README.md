@@ -62,6 +62,79 @@ For a more options, use the make command:
 ---------------------------------------------------------------------
 ```
 
+> **Warning**  
+> When using either the `make dynamic`, `make static`, `make test` or `make benchmarks` commands, the source code will be compiled with the custom options of the specified target.  
+> If the sources have not changed, the objects may not be compiled at all.  
+> If you need to add or remote those compiler flags, it is advised to run the `make clean` command first.
+
+### Dynamic library
+
+The project can be compiled as a dynamic library by running the following command:
+
+```shell
+make dynamic
+```
+
+This will create a dynamic library in the `bin` directory.  
+To use it in your project, either include the headers in the `include` directory or define the functions you intend to use in your code as extern:
+
+```c
+// Best solution:
+// #include "IdSignature.h"
+// If you won't include the headers, you need to define the functions as extern
+#define MAX_DIGEST_SIZE 64
+#define SHA1_DIGEST_SIZE 20
+typedef enum ext_hash_type_t
+{
+    sha_1,
+    sha_256,
+    sha_512
+} hash_type_t;
+
+extern void hash(uint8_t *digest, const char *message, size_t message_len, hash_type_t hash_type);
+
+int main(int argc, char const *argv[])
+{
+    uint8_t hash_sha_1[MAX_DIGEST_SIZE];
+    hash(hash_sha_1, "Hello World", 11, sha_1);
+}
+```
+
+When compiling the project, you need to link the library by adding the `-lIdSignature` flag.  
+If the library is not in the default library path, you need to add the `-L<path>` flag to the compiler command.
+
+```shell
+# Example
+gcc -o main main.c -Lbin -lIdSignature
+```
+
+If you get the error `error while loading shared libraries: libIdSignature.so: cannot open shared object file: No such file or directory`, you need to tell the linker where to find the library.  
+This can be achieved by setting the `LD_LIBRARY_PATH` environment variable:
+
+```shell
+# Example
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path to the library>
+```
+
+### Static library
+
+The project can be compiled as a static library by running the following command:
+
+```shell
+make static
+```
+
+This will create a static library in the `bin` directory.  
+To use it in your project, either include the headers in the `include` directory or define the functions you intend to use in your code as extern as described in the [dynamic library](#dynamic-library) section.
+
+When compiling the project, you need to link the library by adding the `-lIdSignature` flag as well as all the dependencies with `-lgmp`, `-lpbc` and `-lnettle`.
+If the libraries are not in the default library path, you need to add the `-L<path>` flag to the compiler command.
+
+```shell
+# Example
+gcc -o main main.c -Lbin -lIdSignature -lgmp -lpbc -lnettle
+```
+
 ## Documentation
 
 For more information regarding the cryptographic primitives used in this project, please refer to the original papers.  
