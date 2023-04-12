@@ -38,8 +38,6 @@ Then, you can build the project by running the following command:
 make compile
 ```
 
-## Run
-
 Once it has been compiled, the project can be run by executing the following command:
 
 ```shell
@@ -133,6 +131,35 @@ If the libraries are not in the default library path, you need to add the `-L<pa
 ```shell
 # Example
 gcc -o main main.c -Lbin -lIdSignature -lgmp -lpbc -lnettle
+```
+
+## Usage
+
+After the compilation, an executable will be created in the `bin` directory.  
+You can run it directly or use the `run.sh` script, which will keep checking for changes in the source files and recompile the project if needed.
+
+```shell
+./run.sh <operation> [options]
+```
+
+```shell
+# Generate the system parameters
+./run.sh setup -o setup_file
+```
+
+```shell
+# Generate the keys associated with the provided identities
+./run.sh keygen "$(<setup_file)" user_id [... user_id] -o keys_file
+```
+
+```shell
+# Generate the delegation from 'from_user' to 'to_user' using the private key of 'from_user' in the form [x, y] obtained from the keygen operation
+./run.sh delegate "$(<setup)" "[x, y]" from_user to_user
+```
+
+```shell
+# Verifies that the delegation is actually from 'from_user' to 'to_user' by providing the values 'r' and 'S' obtained from the delegate operation
+./run.sh del_verify "$(<setup)" "[r_x, r_y]" "[s_x, s_y]" from_user to_user
 ```
 
 ## Documentation
