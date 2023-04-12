@@ -137,11 +137,12 @@ void setup_from_params(sv_public_params_t public_p, sv_secret_params_t secret_p,
     public_p->hash_type = hash_type;
 }
 
-void setup_from_str(sv_public_params_t public_p, sv_secret_params_t secret_p, const char *pairing_p_str)
+void setup_from_str(sv_public_params_t public_p, sv_secret_params_t secret_p, char pairing_p_str[])
 {
     pbc_param_t pairing_p;
     hash_type_t hash_type;
     pbc_param_init_set_str(pairing_p, pairing_p_str);
+    pairing_init_pbc_param(public_p->pairing, pairing_p);
 
     char *pos, *new_line;
     pos = strstr(pairing_p_str, "hash_type ");
@@ -151,10 +152,22 @@ void setup_from_str(sv_public_params_t public_p, sv_secret_params_t secret_p, co
     hash_type = atoi(pos + 10);
     if (new_line)
         *new_line = '\n';
-
-    setup_from_params(public_p, secret_p, hash_type, pairing_p);
-
-    // If present in the string, copy the master secret key
+    pos = strstr(pairing_p_str, "P ");
+    new_line = strchr(pos, '\n');
+    if (new_line)
+        *new_line = '\0';
+    element_init_G1(public_p->P, public_p->pairing);
+    element_set_str(public_p->P, pos + 2, 10);
+    if (new_line)
+        *new_line = '\n';
+    pos = strstr(pairing_p_str, "pk ");
+    new_line = strchr(pos, '\n');
+    if (new_line)
+        *new_line = '\0';
+    element_init_G1(public_p->pk, public_p->pairing);
+    element_set_str(public_p->pk, pos + 3, 10);
+    if (new_line)
+        *new_line = '\n';
     pos = strstr(pairing_p_str, "msk ");
     if (pos != NULL)
     {
@@ -163,9 +176,18 @@ void setup_from_str(sv_public_params_t public_p, sv_secret_params_t secret_p, co
             *new_line = '\0';
         element_init_Zr(secret_p->msk, public_p->pairing);
         element_set_str(secret_p->msk, pos + 4, 10);
+        secret_p->public_params = public_p;
         if (new_line)
             *new_line = '\n';
     }
+
+    // public params setup
+    public_p->q = pairing_length_in_bytes_x_only_G1(public_p->pairing);
+    public_p->l1 = public_p->q / 2;
+    public_p->l2 = public_p->q - public_p->l1;
+    public_p->hash_type = hash_type;
+
+    pbc_param_clear(pairing_p);
 }
 
 void extract_p(element_t pk_id, const sv_identity_t identity, sv_public_params_t public_p)

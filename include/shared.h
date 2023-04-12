@@ -12,6 +12,7 @@
 #define MAX_DIGEST_SIZE 64
 #define MAX_PARAM_LINE_SIZE 4096
 #define generic_dlog_secure_size_by_security_level(level) ((level)*2)
+#define STR_IDENTITY_SIZE(string) strlen(string) > IDENTITY_SIZE ? IDENTITY_SIZE : strlen(string)
 
 typedef enum
 {
@@ -178,14 +179,15 @@ void setup_from_params(sv_public_params_t public_p, sv_secret_params_t secret_p,
 /**
  * @brief Initialization function for the scheme.
  * It takes as input the string representation of the parameters of the pairing, as well as the hash function to use.
- * If the string does not contain a master key msk, a new one will be generated.
  * Produces the master key msk and the system's parameters (G1, G2, H0, H1, H2, F1, F2, e, P, pk, q, l1, l2).
- * 
+ * @warning If the string does not contain a master key msk, the secret parameters will not be initialized.
+ * This is not a problem if the msk is not needed.
+ *
  * @param public_p All the public parameters created through the setup.
  * @param secret_p Secret parameters created through the setup.
  * @param pairing_p_str String representation of the parameters of the pairing.
  */
-void setup_from_str(sv_public_params_t public_p, sv_secret_params_t secret_p, const char *pairing_p_str);
+void setup_from_str(sv_public_params_t public_p, sv_secret_params_t secret_p, char pairing_p_str[]);
 
 /**
  * @brief Produces the public key pk_id from an identity.
