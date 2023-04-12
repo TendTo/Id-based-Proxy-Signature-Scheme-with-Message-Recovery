@@ -10,6 +10,7 @@
 #define IDENTITY_SIZE 32
 #define WARRANT_SIZE 64
 #define MAX_DIGEST_SIZE 64
+#define MAX_PARAM_LINE_SIZE 4096
 #define generic_dlog_secure_size_by_security_level(level) ((level)*2)
 
 typedef enum
@@ -73,29 +74,29 @@ typedef struct proxy_signature_struct proxy_signature_t[1];
 /**
  * @brief Get the size of the non generic dlog secure size based on the NIST suggestions.
  *
- * @param lvl security expressed as a number of bits.
+ * @param sec_lvl security expressed as a number of bits.
  * @return unsigned int secure size of elements in the group in bits.
  */
-unsigned int non_generic_dlog_secure_size_by_security_level(unsigned int lvl);
+unsigned int non_generic_dlog_secure_size_by_security_level(unsigned int sec_lvl);
 
 /**
- * @brief Generate the digest of the data using the hash_type algorithm
+ * @brief Generate the digest of the data using the hash_type algorithm.
  *
- * @param digest ouput digest obtained by applying the hash_type algorithm to data
- * @param data data to be hashed
- * @param len length of ht data buffer in bytes
- * @param hash_type hash algorithm to be used
- * @return unsigned short length of the digest in bytes
+ * @param digest ouput digest obtained by applying the hash_type algorithm to data.
+ * @param data data to be hashed.
+ * @param len length of the data buffer in bytes.
+ * @param hash_type hash algorithm to be used.
+ * @return unsigned short length of the digest in bytes.
  */
 unsigned short hash(uint8_t digest[MAX_DIGEST_SIZE], const void *data, size_t len, hash_type_t hash_type);
 
 /**
  * @brief Generate the digest of the element using the hash_type algorithm
  *
- * @param digest output digest obtained by applying the hash_type algorithm to the element
- * @param e element to be hashed
- * @param hash_type hash algorithm to be used
- * @return unsigned short length of the digest in bytes
+ * @param digest output digest obtained by applying the hash_type algorithm to the element.
+ * @param e element to be hashed.
+ * @param hash_type hash algorithm to be used.
+ * @return unsigned short length of the digest in bytes.
  */
 unsigned short hash_element(uint8_t digest[MAX_DIGEST_SIZE], element_t e, hash_type_t hash_type);
 
@@ -110,11 +111,10 @@ unsigned short hash_element(uint8_t digest[MAX_DIGEST_SIZE], element_t e, hash_t
 unsigned short serialize_warrant(uint8_t buffer[WARRANT_SIZE], const warrant_t m);
 
 /**
- * @brief Deserialize a warrant structure converting it from a byte array.
- * This allows for easy hashing and storage of the warrant.
+ * @brief Deserialize a warrant structure converting it from a byte array to a warrant structure.
  *
- * @param buffer buffer to store the serialized warrant.
  * @param m warrant structure to be serialized.
+ * @param buffer buffer to store the serialized warrant.
  * @return unsigned short size of the serialized warrant.
  */
 unsigned short deserialize_warrant(warrant_t m, const uint8_t buffer[WARRANT_SIZE]);
@@ -143,16 +143,49 @@ void hash_warrant_and_r(element_t h, element_t r, warrant_t m, hash_type_t hash_
 void calculate_beta(uint8_t beta[], const uint8_t msg[], size_t msg_size, sv_public_params_t public_p);
 
 /**
+ * @brief Initialize the pairings parameters.
+ *
+ * @param pairings_p Structure where the parameters are stored.
+ * @param sec_lvl The security level the scheme is expected to have.
+ */
+void params_init(pbc_param_t pairings_p, int sec_lvl);
+
+/**
  * @brief Initialization function for the scheme.
- * It takes as input a security parameter lambda and return a master key sk
- * and the system's parameters (G1, G2, H0, H1, H2, F1, F2, e, P, pk, q, l1, l2).
+ * It takes as input a security parameter lambda and the hash function to use.
+ * It will take care of generating the parameters of the pairing.
+ * Produces the master key msk and the system's parameters (G1, G2, H0, H1, H2, F1, F2, e, P, pk, q, l1, l2).
  *
  * @param public_p All the public parameters created through the setup.
- * @param secret_p secret parameters created through the setup.
+ * @param secret_p Secret parameters created through the setup.
  * @param sec_lvl The security level the scheme is expected to have.
  * @param hash_type The hash function used by the scheme.
  */
 void setup(sv_public_params_t public_p, sv_secret_params_t secret_p, int sec_lvl, hash_type_t hash_type);
+
+/**
+ * @brief Initialization function for the scheme.
+ * It takes as input the hash function to use and the parameters of the pairing.
+ * Produces the master key msk and the system's parameters (G1, G2, H0, H1, H2, F1, F2, e, P, pk, q, l1, l2).
+ *
+ * @param public_p All the public parameters created through the setup.
+ * @param secret_p Secret parameters created through the setup.
+ * @param hash_type The hash function used by the scheme.
+ * @param pairing_p Parameters of the pairing.
+ */
+void setup_from_params(sv_public_params_t public_p, sv_secret_params_t secret_p, hash_type_t hash_type, pbc_param_t pairing_p);
+
+/**
+ * @brief Initialization function for the scheme.
+ * It takes as input the string representation of the parameters of the pairing, as well as the hash function to use.
+ * If the string does not contain a master key msk, a new one will be generated.
+ * Produces the master key msk and the system's parameters (G1, G2, H0, H1, H2, F1, F2, e, P, pk, q, l1, l2).
+ * 
+ * @param public_p All the public parameters created through the setup.
+ * @param secret_p Secret parameters created through the setup.
+ * @param pairing_p_str String representation of the parameters of the pairing.
+ */
+void setup_from_str(sv_public_params_t public_p, sv_secret_params_t secret_p, const char *pairing_p_str);
 
 /**
  * @brief Produces the public key pk_id from an identity.

@@ -100,12 +100,22 @@ void calculate_beta(uint8_t beta[], const uint8_t raw_msg[], size_t msg_size, sv
     memcpy(beta + public_p->l1, beta_right, public_p->l2);
 }
 
+void params_init(pbc_param_t pairings_p, int lambda)
+{
+    pbc_param_init_a_gen(pairings_p, generic_dlog_secure_size_by_security_level(lambda), non_generic_dlog_secure_size_by_security_level(lambda) / 2);
+}
+
 void setup(sv_public_params_t public_p, sv_secret_params_t secret_p, int lambda, hash_type_t hash_type)
 {
     pbc_param_t pairing_p;
     pbc_param_init_a_gen(pairing_p, generic_dlog_secure_size_by_security_level(lambda), non_generic_dlog_secure_size_by_security_level(lambda) / 2);
-    pairing_init_pbc_param(public_p->pairing, pairing_p);
+    setup_from_params(public_p, secret_p, hash_type, pairing_p);
     pbc_param_clear(pairing_p);
+}
+
+void setup_from_params(sv_public_params_t public_p, sv_secret_params_t secret_p, hash_type_t hash_type, pbc_param_t pairing_p)
+{
+    pairing_init_pbc_param(public_p->pairing, pairing_p);
 
     // secret params init
     element_init_Zr(secret_p->msk, public_p->pairing);
@@ -125,6 +135,37 @@ void setup(sv_public_params_t public_p, sv_secret_params_t secret_p, int lambda,
     public_p->l1 = public_p->q / 2;
     public_p->l2 = public_p->q - public_p->l1;
     public_p->hash_type = hash_type;
+}
+
+void setup_from_str(sv_public_params_t public_p, sv_secret_params_t secret_p, const char *pairing_p_str)
+{
+    pbc_param_t pairing_p;
+    hash_type_t hash_type;
+    pbc_param_init_set_str(pairing_p, pairing_p_str);
+
+    char *pos, *new_line;
+    pos = strstr(pairing_p_str, "hash_type ");
+    new_line = strchr(pos, '\n');
+    if (new_line)
+        *new_line = '\0';
+    hash_type = atoi(pos + 10);
+    if (new_line)
+        *new_line = '\n';
+
+    setup_from_params(public_p, secret_p, hash_type, pairing_p);
+
+    // If present in the string, copy the master secret key
+    pos = strstr(pairing_p_str, "msk ");
+    if (pos != NULL)
+    {
+        new_line = strchr(pos, '\n');
+        if (new_line)
+            *new_line = '\0';
+        element_init_Zr(secret_p->msk, public_p->pairing);
+        element_set_str(secret_p->msk, pos + 4, 10);
+        if (new_line)
+            *new_line = '\n';
+    }
 }
 
 void extract_p(element_t pk_id, const sv_identity_t identity, sv_public_params_t public_p)
