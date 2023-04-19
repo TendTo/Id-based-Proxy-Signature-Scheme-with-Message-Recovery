@@ -79,7 +79,7 @@ void calculate_beta(uint8_t beta[], const uint8_t raw_msg[], size_t msg_size, sv
 {
     // make sure the msg length is l2 and the last bytes are 0
     uint8_t msg[public_p->l2];
-    if (msg_size >= (size_t)public_p->l2)
+    if (msg_size > (size_t)public_p->l2)
         msg_size = public_p->l2;
     else
         memset(msg, 0, public_p->l2);
@@ -131,7 +131,7 @@ void setup_from_params(sv_public_params_t public_p, sv_secret_params_t secret_p,
     // public params setup
     element_random(public_p->P);
     element_mul_zn(public_p->pk, public_p->P, secret_p->msk);
-    public_p->q = pairing_length_in_bytes_x_only_G1(public_p->pairing);
+    public_p->q = pairing_length_in_bytes_Zr(public_p->pairing);
     public_p->l1 = public_p->q / 2;
     public_p->l2 = public_p->q - public_p->l1;
     public_p->hash_type = hash_type;

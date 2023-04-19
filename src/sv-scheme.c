@@ -7,7 +7,7 @@ void p_sign(proxy_signature_t p_sig, element_t k_sign, delegation_t w, const uin
     element_t k, r_b, v, alpha;
     element_init_GT(r_b, public_p->pairing);
     element_init_Zr(k, public_p->pairing);
-    element_init_G1(v, public_p->pairing);
+    element_init_GT(v, public_p->pairing);
     element_init_Zr(alpha, public_p->pairing);
     element_init_Zr(p_sig->V, public_p->pairing);
     element_init_G1(p_sig->U, public_p->pairing);
@@ -28,9 +28,13 @@ void p_sign(proxy_signature_t p_sig, element_t k_sign, delegation_t w, const uin
     // beta = F1(msg) || F2(F1(msg)) (+) msg)
     uint8_t beta[public_p->q];
     calculate_beta(beta, msg, msg_size, public_p);
+    PRINT_BUFFER_HEX(beta, public_p->q, "beta: ");
 
     // alpha = [beta]_10
     element_from_bytes(alpha, beta);
+    element_printf("alpha: %B\n", alpha);
+    element_to_bytes(beta, alpha);
+    PRINT_BUFFER_HEX(beta, public_p->q, "bet2: ");
 
     // V = H(v) + alpha
     uint8_t v_digest[MAX_DIGEST_SIZE];
@@ -68,7 +72,7 @@ unsigned short sign_verify(proxy_signature_t p_sig, sv_public_params_t public_p)
     // p_2 = e(pk_a + pk_b, Pub)^-h
     element_add(p_sum, pk_a, pk_b);
     element_pairing(p_2, p_sum, public_p->pk);
-    element_mul_si(h, h, -1);
+    element_neg(h, h);
     element_pow_zn(p_2, p_2, h);
     element_mul(p_1, p_1, p_2);
 
@@ -78,34 +82,26 @@ unsigned short sign_verify(proxy_signature_t p_sig, sv_public_params_t public_p)
     element_sub(alpha, p_sig->V, alpha);
 
     // beta = [a]_2
-    int alpha_size = element_length_in_bytes(alpha);
-    uint8_t beta[alpha_size];
+    uint8_t beta[public_p->q];
     element_to_bytes(beta, alpha);
-
-    printf("Beta: ");
-    for (int i = 0; i < alpha_size; i++)
-        printf("%02x ", beta[i]);
-    printf("\n");
+    PRINT_BUFFER_HEX(beta, public_p->q, "BETA: ");
+    element_printf("ALPHA: %B\n", alpha);
 
     // msg = F2(l1|beta|) (+) |beta|l2
     uint8_t beta_digest[MAX_DIGEST_SIZE], msg[public_p->l2];
     hash(beta_digest, beta, public_p->l1, public_p->hash_type);
+    element_from_bytes(alpha, beta_digest);
+    element_to_bytes(beta_digest, alpha);
     for (int i = 0; i < public_p->l2; i++)
         msg[i] = beta_digest[i] ^ beta[i + public_p->l1];
 
-    printf("Message: ");
-    for (int i = 0; i < public_p->l2; i++)
-        printf("%02x ", msg[i]);
-    printf("\n");
-
-    printf("Message: ");
-    for (int i = 0; i < public_p->l2; i++)
-        printf("%c ", msg[i]);
-    printf("\n");
-
     uint8_t msg_digest[MAX_DIGEST_SIZE];
     hash(msg_digest, msg, public_p->l2, public_p->hash_type);
+    // Make sure the number produced by the hash function is less than the modulus
+    element_from_bytes(alpha, msg_digest);
+    element_to_bytes(msg_digest, alpha);
     int res = memcmp(msg_digest, beta, public_p->l1);
+    PRINT_BUFFER_HEX(msg_digest, public_p->l1, "BET2: ");
 
     element_clear(h);
     element_clear(alpha);

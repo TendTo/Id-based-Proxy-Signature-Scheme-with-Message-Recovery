@@ -14,6 +14,13 @@
 #define generic_dlog_secure_size_by_security_level(level) ((level)*2)
 #define STR_IDENTITY_SIZE(string) strlen(string) > IDENTITY_SIZE ? IDENTITY_SIZE : strlen(string)
 
+// DEBUG MACROS
+#define PRINT_BUFFER_HEX(_buffer, _len, _msg) \
+    printf(_msg);                             \
+    for (int i = 0; i < _len; i++)            \
+        printf("%02x ", _buffer[i]);          \
+    printf("\n");
+
 typedef enum
 {
     sha_1,

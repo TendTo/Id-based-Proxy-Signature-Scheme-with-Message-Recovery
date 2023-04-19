@@ -143,7 +143,7 @@ You can run it directly or use the `run.sh` script, which will keep checking for
 ```
 
 ```shell
-# Generate the system parameters
+# Generate the system parameters and store them in the provided file
 ./run.sh setup -o setup_file
 ```
 
@@ -174,5 +174,3 @@ A slightly more in depth explanation can be found in the [docs folder](docs/READ
 - [PBC](https://crypto.stanford.edu/pbc/)
 - [Mario di Raimondo](https://diraimondo.dmi.unict.it/)
 - [Crypto Engineering](https://diraimondo.dmi.unict.it/teaching/crypto/)
-
-[1]: https://www.researchgate.net/publication/283648628_An_Improved_ID-based_Proxy_Signature_Scheme_with_Message_Recovery
