@@ -52,9 +52,10 @@ static void bench_sign_verify(bench_param_t bench_p)
     pk_gen(k_sign, sk, w, public_p);
     p_sign(p_sig, k_sign, w, BENCH_IDENTITY, 32, public_p);
 
+    uint8_t msg[public_p->l2];
     perform_wc_time_sampling_period(
         bench_p->bench_stats, bench_p->max_sampling_time, bench_p->max_samples, tu_millis,
-        { sign_verify(p_sig, public_p); },
+        { sign_verify(msg, p_sig, public_p); },
         {});
 
     printf_short_stats("\tsign_verify", bench_p->bench_stats, "");
