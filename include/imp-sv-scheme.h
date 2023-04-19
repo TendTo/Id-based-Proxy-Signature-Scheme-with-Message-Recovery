@@ -27,9 +27,10 @@ void imp_p_sign(proxy_signature_t p_sig, element_t k_sign, delegation_t w, const
  * @brief Checks if the proxy signature is valid.
  * If so, the original message m is returned.
  *
+ * @param msg message recovered from the proxy signature. The buffer must be l2 bytes long.
  * @param ps proxy signature to be verified.
  * @param public_p All the public parameters of the scheme.
  */
-unsigned short imp_sign_verify(proxy_signature_t p_sig, sv_public_params_t public_p);
+unsigned short imp_sign_verify(uint8_t msg[], proxy_signature_t p_sig, sv_public_params_t public_p);
 
 #endif // IMP_SV_SCHEME_H

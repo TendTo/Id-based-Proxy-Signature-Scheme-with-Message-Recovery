@@ -77,6 +77,9 @@ void hash_warrant_and_r(element_t h, element_t r, warrant_t m, hash_type_t hash_
 
 void calculate_beta(uint8_t beta[], const uint8_t raw_msg[], size_t msg_size, sv_public_params_t public_p)
 {
+    element_t temp;
+    element_init_Zr(temp, public_p->pairing);
+
     // make sure the msg length is l2 and the last bytes are 0
     uint8_t msg[public_p->l2];
     if (msg_size > (size_t)public_p->l2)
@@ -88,6 +91,9 @@ void calculate_beta(uint8_t beta[], const uint8_t raw_msg[], size_t msg_size, sv
     // beta_left = F1(msg)
     uint8_t beta_left[MAX_DIGEST_SIZE];
     hash(beta_left, msg, public_p->l2, public_p->hash_type);
+    // Make sure beta_left is in Zr
+    element_from_bytes(temp, beta_left);
+    element_to_bytes(beta_left, temp);
 
     // beta_right = F2(F1(msg)) (+) msg
     uint8_t beta_right[MAX_DIGEST_SIZE];
@@ -98,6 +104,7 @@ void calculate_beta(uint8_t beta[], const uint8_t raw_msg[], size_t msg_size, sv
     // beta = beta_left || beta_right
     memcpy(beta, beta_left, public_p->l1);
     memcpy(beta + public_p->l1, beta_right, public_p->l2);
+    element_clear(temp);
 }
 
 void params_init(pbc_param_t pairings_p, int lambda)

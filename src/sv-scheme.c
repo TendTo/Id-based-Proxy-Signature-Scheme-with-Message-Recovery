@@ -28,13 +28,9 @@ void p_sign(proxy_signature_t p_sig, element_t k_sign, delegation_t w, const uin
     // beta = F1(msg) || F2(F1(msg)) (+) msg)
     uint8_t beta[public_p->q];
     calculate_beta(beta, msg, msg_size, public_p);
-    PRINT_BUFFER_HEX(beta, public_p->q, "beta: ");
 
     // alpha = [beta]_10
     element_from_bytes(alpha, beta);
-    element_printf("alpha: %B\n", alpha);
-    element_to_bytes(beta, alpha);
-    PRINT_BUFFER_HEX(beta, public_p->q, "bet2: ");
 
     // V = H(v) + alpha
     uint8_t v_digest[MAX_DIGEST_SIZE];
@@ -52,7 +48,7 @@ void p_sign(proxy_signature_t p_sig, element_t k_sign, delegation_t w, const uin
     element_clear(alpha);
 }
 
-unsigned short sign_verify(proxy_signature_t p_sig, sv_public_params_t public_p)
+unsigned short sign_verify(uint8_t msg[], proxy_signature_t p_sig, sv_public_params_t public_p)
 {
     element_t h, alpha, pk_a, pk_b, p_sum, p_1, p_2;
     element_init_Zr(h, public_p->pairing);
@@ -84,24 +80,20 @@ unsigned short sign_verify(proxy_signature_t p_sig, sv_public_params_t public_p)
     // beta = [a]_2
     uint8_t beta[public_p->q];
     element_to_bytes(beta, alpha);
-    PRINT_BUFFER_HEX(beta, public_p->q, "BETA: ");
-    element_printf("ALPHA: %B\n", alpha);
 
     // msg = F2(l1|beta|) (+) |beta|l2
-    uint8_t beta_digest[MAX_DIGEST_SIZE], msg[public_p->l2];
+    uint8_t beta_digest[MAX_DIGEST_SIZE];
     hash(beta_digest, beta, public_p->l1, public_p->hash_type);
-    element_from_bytes(alpha, beta_digest);
-    element_to_bytes(beta_digest, alpha);
     for (int i = 0; i < public_p->l2; i++)
         msg[i] = beta_digest[i] ^ beta[i + public_p->l1];
 
     uint8_t msg_digest[MAX_DIGEST_SIZE];
     hash(msg_digest, msg, public_p->l2, public_p->hash_type);
-    // Make sure the number produced by the hash function is less than the modulus
+    // Make sure msg_digest is in Zr
     element_from_bytes(alpha, msg_digest);
     element_to_bytes(msg_digest, alpha);
+    // F1(msg) == l1|beta|
     int res = memcmp(msg_digest, beta, public_p->l1);
-    PRINT_BUFFER_HEX(msg_digest, public_p->l1, "BET2: ");
 
     element_clear(h);
     element_clear(alpha);

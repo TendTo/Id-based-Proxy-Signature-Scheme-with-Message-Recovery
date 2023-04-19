@@ -46,7 +46,7 @@ void imp_p_sign(proxy_signature_t p_sig, element_t k_sign, delegation_t w, const
     element_clear(temp);
 }
 
-unsigned short imp_sign_verify(proxy_signature_t p_sig, sv_public_params_t public_p)
+unsigned short imp_sign_verify(uint8_t msg[], proxy_signature_t p_sig, sv_public_params_t public_p)
 {
     element_t h, alpha, pk_a, pk_b, p_sum, p_1, p_2, V;
     element_init_Zr(h, public_p->pairing);
@@ -87,13 +87,16 @@ unsigned short imp_sign_verify(proxy_signature_t p_sig, sv_public_params_t publi
     element_to_bytes(beta, alpha);
 
     // msg = F2(l1|beta|) (+) |beta|l2
-    uint8_t beta_digest[MAX_DIGEST_SIZE], msg[public_p->l2];
+    uint8_t beta_digest[MAX_DIGEST_SIZE];
     hash(beta_digest, beta, public_p->l1, public_p->hash_type);
     for (int i = 0; i < public_p->l2; i++)
         msg[i] = beta_digest[i] ^ beta[i + public_p->l1];
 
     uint8_t msg_digest[MAX_DIGEST_SIZE];
     hash(msg_digest, msg, public_p->l2, public_p->hash_type);
+    // Make sure msg_digest is in Zr
+    element_from_bytes(alpha, msg_digest);
+    element_to_bytes(msg_digest, alpha);
     int res = memcmp(msg_digest, beta, public_p->l1);
 
     element_clear(h);
