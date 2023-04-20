@@ -79,7 +79,7 @@ dynamic: CFLAGS = $(DYN_CFLAGS)
 dynamic: LDLIBS = $(DYN_LDLIBS)
 dynamic: CDEFINE = $(DYN_CDEFINE)
 dynamic: $(OBJ_DIR) $(BIN_DIR) $(SOURCE_OBJECTS)
-	$(CC) -shared -o $(BIN_DIR)/$(DYN_BINARY) $(SOURCE_OBJECTS) $(DYN_CFLAGS) $(DYN_LDLIBS) $(DYN_CDEFINE)
+	@$(CC) -shared -o $(BIN_DIR)/$(DYN_BINARY) $(SOURCE_OBJECTS) $(DYN_CFLAGS) $(DYN_LDLIBS) $(DYN_CDEFINE)
 
 # Compiling the static library
 static: CFLAGS = $(STAT_CFLAGS)
@@ -103,7 +103,7 @@ $(TEST_ENTRY_OBJECT) $(TEST_SOURCE_OBJECTS): $(TEST_ENTRY_FILE) $(TEST_SOURCE_FI
 test_compile: CFLAGS = $(TEST_CFLAGS)
 test_compile: LDLIBS = $(TEST_LDLIBS)
 test_compile: CDEFINE = $(TEST_CDEFINE)
-test_compile: compile $(OBJ_DIR) $(BIN_DIR) $(TEST_ENTRY_OBJECT)
+test_compile: compile $(TEST_ENTRY_OBJECT)
 	@$(CC) $(TEST_ENTRY_FILE) $(SOURCE_OBJECTS) $(TEST_SOURCE_OBJECTS) -o $(BIN_DIR)/$(TEST_BINARY) $(TEST_CFLAGS) $(TEST_LDLIBS) $(TEST_CDEFINE) \
 	2> temp_error_file; if [ $$? -ne 0 ]; then touch _error_flag; fi; true
 	@$(call error_handling, "Compiling test binary...  ")

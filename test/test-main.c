@@ -1,10 +1,4 @@
-#include <check.h>
-#include "test-const.h"
-#include "test-shared.h"
-#include "test-sv-scheme.h"
-#include "test-imp-sv-scheme.h"
-
-#define NSUITE 3
+#include "test-main.h"
 
 int main()
 {
