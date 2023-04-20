@@ -95,8 +95,7 @@ unsigned short imp_sign_verify(uint8_t msg[], proxy_signature_t p_sig, sv_public
     uint8_t msg_digest[MAX_DIGEST_SIZE];
     hash(msg_digest, msg, public_p->l2, public_p->hash_type);
     // Make sure msg_digest is in Zr
-    element_from_bytes(alpha, msg_digest);
-    element_to_bytes(msg_digest, alpha);
+    msg_digest[0] = 0;
     int res = memcmp(msg_digest, beta, public_p->l1);
 
     element_clear(h);

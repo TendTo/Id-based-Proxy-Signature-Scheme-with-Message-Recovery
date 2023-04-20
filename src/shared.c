@@ -92,8 +92,7 @@ void calculate_beta(uint8_t beta[], const uint8_t raw_msg[], size_t msg_size, sv
     uint8_t beta_left[MAX_DIGEST_SIZE];
     hash(beta_left, msg, public_p->l2, public_p->hash_type);
     // Make sure beta_left is in Zr
-    element_from_bytes(temp, beta_left);
-    element_to_bytes(beta_left, temp);
+    beta_left[0] = 0;
 
     // beta_right = F2(F1(msg)) (+) msg
     uint8_t beta_right[MAX_DIGEST_SIZE];
