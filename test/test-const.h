@@ -30,7 +30,7 @@ extern const size_t sec_levels_order[N_SEC_LEVELS];
 typedef struct
 {
     hash_type_t hash_type;
-    unsigned short digest_size;
+    uint16_t digest_size;
     const uint8_t *identity_digest;
     const uint8_t *element_digest;
 } hash_test_t;

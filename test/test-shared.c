@@ -65,52 +65,6 @@ END_TEST
 
 #pragma endregion
 
-#pragma region serialization
-
-START_TEST(test_serialization)
-{
-    serialized_warrant_t warrant_buffer;
-    warrant_t m;
-
-    for (size_t i = 0; i < IDENTITY_SIZE; i++)
-    {
-        m->from[i] = i;
-        m->to[i] = i + IDENTITY_SIZE;
-    }
-
-    unsigned short size = serialize_warrant(warrant_buffer, m);
-
-    ck_assert_int_eq(size, WARRANT_SIZE);
-    for (size_t i = 0; i < WARRANT_SIZE; i++)
-    {
-        ck_assert_int_eq(warrant_buffer[i], i);
-    }
-}
-END_TEST
-
-START_TEST(test_deserialization)
-{
-    serialized_warrant_t warrant_buffer;
-    warrant_t m;
-
-    for (size_t i = 0; i < WARRANT_SIZE; i++)
-    {
-        warrant_buffer[i] = i;
-    }
-
-    unsigned short size = deserialize_warrant(m, warrant_buffer);
-
-    ck_assert_int_eq(size, WARRANT_SIZE);
-    for (size_t i = 0; i < IDENTITY_SIZE; i++)
-    {
-        ck_assert_int_eq(m->from[i], i);
-        ck_assert_int_eq(m->to[i], i + IDENTITY_SIZE);
-    }
-}
-END_TEST
-
-#pragma endregion
-
 #pragma region setup
 
 START_TEST(test_setup)
@@ -252,6 +206,7 @@ START_TEST(test_delegate)
     setup(public_p, secret_p, 80, sha_1);
     element_init_G1(sk, public_p->pairing);
     extract_s(sk, TEST_IDENTITY, secret_p);
+    delegation_init(w, public_p);
     delegate(w, sk, m, public_p);
 
     ck_assert_ptr_eq(w->m, m);
@@ -278,6 +233,7 @@ START_TEST(test_del_verify)
     setup(public_p, secret_p, 80, sha_1);
     element_init_G1(sk, public_p->pairing);
     extract_s(sk, TEST_IDENTITY, secret_p);
+    delegation_init(w, public_p);
     delegate(w, sk, m, public_p);
 
     ck_assert(del_verify(w, TEST_IDENTITY, public_p));
@@ -299,6 +255,7 @@ START_TEST(test_del_verify_str)
     setup(public_p, secret_p, 80, sha_1);
     element_init_G1(sk, public_p->pairing);
     extract_s(sk, m->from, secret_p);
+    delegation_init(w, public_p);
     delegate(w, sk, m, public_p);
 
     ck_assert(del_verify(w, m->from, public_p));
@@ -319,6 +276,7 @@ START_TEST(test_del_verify_fail)
     setup(public_p, secret_p, 80, sha_1);
     element_init_G1(sk, public_p->pairing);
     extract_s(sk, TEST_IDENTITY, secret_p);
+    delegation_init(w, public_p);
     delegate(w, sk, m, public_p);
 
     // Wrong identity as the one that delegated
@@ -344,6 +302,7 @@ START_TEST(test_pk_sign)
     setup(public_p, secret_p, 80, sha_1);
     element_init_G1(sk, public_p->pairing);
     extract_s(sk, TEST_IDENTITY, secret_p);
+    delegation_init(w, public_p);
     delegate(w, sk, m, public_p);
 
     element_init_G1(k_sign, public_p->pairing);
@@ -351,105 +310,6 @@ START_TEST(test_pk_sign)
     pk_gen(k_sign, sk, w, public_p);
 
     ck_assert(!element_is0(k_sign));
-}
-END_TEST
-
-#pragma endregion
-
-#pragma region clear
-
-START_TEST(test_public_params_clear)
-{
-    sv_public_params_t public_p;
-    sv_secret_params_t secret_p;
-    setup(public_p, secret_p, 80, sha_1);
-    public_param_clear(public_p);
-    ck_assert(1);
-}
-END_TEST
-
-START_TEST(test_public_params_already_cleared)
-{
-    sv_public_params_t public_p;
-    sv_secret_params_t secret_p;
-    setup(public_p, secret_p, 80, sha_1);
-    public_param_clear(public_p);
-    public_param_clear(public_p);
-}
-END_TEST
-
-START_TEST(test_public_params_not_init)
-{
-    sv_public_params_t public_p;
-    public_param_clear(public_p);
-}
-END_TEST
-
-START_TEST(test_secret_params_clear)
-{
-    sv_public_params_t public_p;
-    sv_secret_params_t secret_p;
-    setup(public_p, secret_p, 80, sha_1);
-    secret_param_clear(secret_p);
-    ck_assert(1);
-}
-END_TEST
-
-START_TEST(test_secret_params_already_cleared)
-{
-    sv_public_params_t public_p;
-    sv_secret_params_t secret_p;
-    setup(public_p, secret_p, 80, sha_1);
-    secret_param_clear(secret_p);
-    secret_param_clear(secret_p);
-}
-END_TEST
-
-START_TEST(test_secret_params_not_init)
-{
-    sv_secret_params_t secret_p;
-    secret_param_clear(secret_p);
-}
-END_TEST
-
-START_TEST(test_delegation_clear)
-{
-    sv_public_params_t public_p;
-    sv_secret_params_t secret_p;
-    delegation_t w;
-    warrant_t m;
-    element_t sk;
-
-    memcpy(m->from, TEST_IDENTITY, IDENTITY_SIZE);
-    memcpy(m->to, TEST_IDENTITY_2, IDENTITY_SIZE);
-
-    setup(public_p, secret_p, 80, sha_1);
-    extract_s(sk, TEST_IDENTITY, secret_p);
-    delegate(w, sk, m, public_p);
-
-    delegation_clear(w);
-    ck_assert(1);
-}
-END_TEST
-
-START_TEST(test_delegation_already_cleared)
-{
-    sv_public_params_t public_p;
-    sv_secret_params_t secret_p;
-    delegation_t w;
-    warrant_t m;
-    element_t sk;
-
-    memcpy(m->from, TEST_IDENTITY, IDENTITY_SIZE);
-    memcpy(m->to, TEST_IDENTITY_2, IDENTITY_SIZE);
-
-    setup(public_p, secret_p, 80, sha_1);
-    extract_s(sk, TEST_IDENTITY, secret_p);
-    delegate(w, sk, m, public_p);
-
-    delegation_clear(w);
-    delegation_clear(w);
-    ck_assert(1);
 }
 END_TEST
 
@@ -467,10 +327,6 @@ Suite *utility_suite()
 
     TCase *tc_calculate_beta = tcase_create("calculate_beta");
     tcase_add_test(tc_calculate_beta, test_calculate_beta);
-
-    TCase *tc_serialize = tcase_create("serialize");
-    tcase_add_test(tc_serialize, test_serialization);
-    tcase_add_test(tc_serialize, test_deserialization);
 
     TCase *tc_setup = tcase_create("setup");
     tcase_add_loop_test(tc_setup, test_setup, 0, N_SEC_LEVELS);
@@ -495,26 +351,14 @@ Suite *utility_suite()
     TCase *tc_pk_sign = tcase_create("pk_sign");
     tcase_add_test(tc_pk_sign, test_pk_sign);
 
-    TCase *tc_clear = tcase_create("clear");
-    tcase_add_test(tc_clear, test_public_params_clear);
-    tcase_add_test_raise_signal(tc_clear, test_public_params_already_cleared, SIGSEGV);
-    tcase_add_test_raise_signal(tc_clear, test_public_params_not_init, SIGSEGV);
-    tcase_add_test(tc_clear, test_secret_params_clear);
-    tcase_add_test(tc_clear, test_secret_params_already_cleared); // Elements can be cleared more than once
-    tcase_add_test_raise_signal(tc_clear, test_secret_params_not_init, SIGSEGV);
-    tcase_add_test(tc_clear, test_delegation_clear);
-    tcase_add_test_raise_signal(tc_clear, test_delegation_already_cleared, SIGSEGV);
-
     suite_add_tcase(s, tc_hash);
     suite_add_tcase(s, tc_hash_element);
     suite_add_tcase(s, tc_calculate_beta);
-    suite_add_tcase(s, tc_serialize);
     suite_add_tcase(s, tc_setup);
     suite_add_tcase(s, tc_extract);
     suite_add_tcase(s, tc_delegate);
     suite_add_tcase(s, tc_del_verify);
     suite_add_tcase(s, tc_pk_sign);
-    suite_add_tcase(s, tc_clear);
 
     return s;
 }

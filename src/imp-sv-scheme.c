@@ -9,9 +9,6 @@ void imp_p_sign(proxy_signature_t p_sig, element_t k_sign, delegation_t w, const
     element_init_Zr(k, public_p->pairing);
     element_init_Zr(alpha, public_p->pairing);
     element_init_G1(temp, public_p->pairing);
-    element_init_Zr(p_sig->V, public_p->pairing);
-    element_init_G1(p_sig->U, public_p->pairing);
-    element_init_GT(p_sig->r, public_p->pairing);
 
     element_set(p_sig->r, w->r);
 
@@ -31,7 +28,7 @@ void imp_p_sign(proxy_signature_t p_sig, element_t k_sign, delegation_t w, const
 
     // V = H(v) + alpha
     uint8_t r_b_digest[MAX_DIGEST_SIZE];
-    unsigned short v_digest_size = hash_element(r_b_digest, r_b, public_p->hash_type);
+    uint16_t v_digest_size = hash_element(r_b_digest, r_b, public_p->hash_type);
     element_from_hash(p_sig->V, r_b_digest, v_digest_size);
     element_add(p_sig->V, p_sig->V, alpha);
 
@@ -46,7 +43,7 @@ void imp_p_sign(proxy_signature_t p_sig, element_t k_sign, delegation_t w, const
     element_clear(temp);
 }
 
-unsigned short imp_sign_verify(uint8_t msg[], proxy_signature_t p_sig, sv_public_params_t public_p)
+uint16_t imp_sign_verify(uint8_t msg[], proxy_signature_t p_sig, sv_public_params_t public_p)
 {
     element_t h, alpha, pk_a, pk_b, p_sum, p_1, p_2, V;
     element_init_Zr(h, public_p->pairing);
@@ -77,7 +74,7 @@ unsigned short imp_sign_verify(uint8_t msg[], proxy_signature_t p_sig, sv_public
     element_mul(p_1, p_1, p_2);
 
     uint8_t p_1_digest[MAX_DIGEST_SIZE];
-    unsigned short p_1_digest_size = hash_element(p_1_digest, p_1, public_p->hash_type);
+    uint16_t p_1_digest_size = hash_element(p_1_digest, p_1, public_p->hash_type);
     element_from_hash(alpha, p_1_digest, p_1_digest_size);
     element_sub(alpha, p_sig->V, alpha);
 

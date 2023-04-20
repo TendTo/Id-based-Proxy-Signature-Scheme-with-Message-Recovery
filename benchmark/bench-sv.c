@@ -15,8 +15,10 @@ static void bench_p_sign(bench_param_t bench_p)
     extract_s(sk, BENCH_IDENTITY, secret_p);
     memcpy(m->from, BENCH_IDENTITY, IDENTITY_SIZE);
     memcpy(m->to, BENCH_IDENTITY, IDENTITY_SIZE);
+    delegation_init(w, public_p);
     delegate(w, sk, m, public_p);
     pk_gen(k_sign, sk, w, public_p);
+    proxy_signature_init(p_sig, public_p);
 
     perform_wc_time_sampling_period(
         bench_p->bench_stats, bench_p->max_sampling_time, bench_p->max_samples, tu_millis,
@@ -48,8 +50,10 @@ static void bench_sign_verify(bench_param_t bench_p)
     extract_s(sk, BENCH_IDENTITY, secret_p);
     memcpy(m->from, BENCH_IDENTITY, IDENTITY_SIZE);
     memcpy(m->to, BENCH_IDENTITY, IDENTITY_SIZE);
+    delegation_init(w, public_p);
     delegate(w, sk, m, public_p);
     pk_gen(k_sign, sk, w, public_p);
+    proxy_signature_init(p_sig, public_p);
     p_sign(p_sig, k_sign, w, BENCH_IDENTITY, 32, public_p);
 
     uint8_t msg[public_p->l2];

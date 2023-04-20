@@ -74,6 +74,7 @@ static void bench_delegate(bench_param_t bench_p)
     extract_s(sk, BENCH_IDENTITY, secret_p);
     memcpy(m->from, BENCH_IDENTITY, IDENTITY_SIZE);
     memcpy(m->to, BENCH_IDENTITY, IDENTITY_SIZE);
+    delegation_init(w, public_p);
     perform_wc_time_sampling_period(
         bench_p->bench_stats, bench_p->max_sampling_time, bench_p->max_samples, tu_millis,
         { delegate(w, sk, m, public_p); },
@@ -102,6 +103,7 @@ static void bench_pk_gen(bench_param_t bench_p)
 
     setup(public_p, secret_p, bench_p->sec_lvl, bench_p->hash_type);
     extract_s(sk, BENCH_IDENTITY, secret_p);
+    delegation_init(w, public_p);
     delegate(w, sk, m, public_p);
     perform_wc_time_sampling_period(
         bench_p->bench_stats, bench_p->max_sampling_time, bench_p->max_samples, tu_millis,
@@ -130,6 +132,7 @@ static void bench_del_verify(bench_param_t bench_p)
     extract_s(sk, BENCH_IDENTITY, secret_p);
     memcpy(m->from, BENCH_IDENTITY, IDENTITY_SIZE);
     memcpy(m->to, BENCH_IDENTITY, IDENTITY_SIZE);
+    delegation_init(w, public_p);
     delegate(w, sk, m, public_p);
     perform_wc_time_sampling_period(
         bench_p->bench_stats, bench_p->max_sampling_time, bench_p->max_samples, tu_millis,

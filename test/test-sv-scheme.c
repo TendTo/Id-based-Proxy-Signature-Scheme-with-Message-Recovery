@@ -23,8 +23,10 @@ static void sv_scheme_parametrized_setup_fixture(int _i)
     element_init_G1(sk_b, public_p->pairing);
     extract_s(sk_a, TEST_IDENTITY, secret_p);
     extract_s(sk_b, TEST_IDENTITY_2, secret_p);
+    delegation_init(w, public_p);
     delegate(w, sk_a, m, public_p);
     pk_gen(k_sign, sk_b, w, public_p);
+    proxy_signature_init(p_sig, public_p);
 }
 
 static void sv_scheme_teardown_fixture()

@@ -3,11 +3,12 @@
 
 #include <check.h>
 #include "test-const.h"
+#include "test-data.h"
 #include "test-shared.h"
 #include "test-sv-scheme.h"
 #include "test-imp-sv-scheme.h"
 
-#define NSUITE 3
+#define NSUITE 4
 
 int main();
 

@@ -2,7 +2,7 @@
 
 int main()
 {
-    Suite *(*suite_creators[NSUITE])(void) = {utility_suite, sv_scheme_suite, imp_sv_scheme_suite};
+    Suite *(*suite_creators[NSUITE])(void) = {utility_suite, data_suite, sv_scheme_suite, imp_sv_scheme_suite};
 
     int no_failed = 0;
     Suite *s;
