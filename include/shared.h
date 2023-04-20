@@ -6,71 +6,7 @@
 #include <pbc/pbc.h>
 #include <nettle/sha1.h>
 #include <nettle/sha2.h>
-
-#define IDENTITY_SIZE 32
-#define WARRANT_SIZE 64
-#define MAX_DIGEST_SIZE 64
-#define MAX_PARAM_LINE_SIZE 4096
-#define generic_dlog_secure_size_by_security_level(level) ((level)*2)
-#define STR_IDENTITY_SIZE(string) strlen(string) > IDENTITY_SIZE ? IDENTITY_SIZE : strlen(string)
-
-typedef enum
-{
-    sha_1,
-    sha_256,
-    sha_512
-} hash_type_t;
-
-typedef uint8_t sv_identity_t[IDENTITY_SIZE];
-typedef uint8_t serialized_warrant_t[WARRANT_SIZE];
-
-struct sv_public_params_struct
-{
-    pairing_t pairing;     // The pairing used by the scheme.
-    element_t pk;          // The public key.
-    element_t P;           // The generator of G1.
-    int l1;                // Half of number bits of an element in G1.
-    int l2;                // Half of number bits of an element in G1.
-    int q;                 // Order of the group.
-    hash_type_t hash_type; // Hash algorithm used by the scheme.
-};
-typedef struct sv_public_params_struct *sv_public_params_ptr;
-typedef struct sv_public_params_struct sv_public_params_t[1];
-
-struct sv_secret_params_struct
-{
-    sv_public_params_ptr public_params; // Public parameters of the scheme.
-    element_t msk;                      // The master secret key.
-};
-typedef struct sv_secret_params_struct *sv_secret_params_ptr;
-typedef struct sv_secret_params_struct sv_secret_params_t[1];
-
-struct warrant_struct
-{
-    sv_identity_t from; // Identity of the user that is delegating the signature.
-    sv_identity_t to;   // Identity of the user that is invested with the signature.
-};
-typedef struct warrant_struct *warrant_ptr;
-typedef struct warrant_struct warrant_t[1];
-
-struct delegation_struct
-{
-    warrant_ptr m; // Warrant of the delegation.
-    element_t r;   // r value used to verify the delegation (in GT).
-    element_t S;   // S value used to verify the delegation (in G1).
-};
-typedef struct delegation_struct *delegation_ptr;
-typedef struct delegation_struct delegation_t[1];
-
-struct proxy_signature_struct
-{
-    warrant_ptr m; // Warrant of the delegation.
-    element_t r;   // r value used to verify the signature (in GT).
-    element_t V;   // V value used to verify the signature (in Zr).
-    element_t U;   // U value used to verify the signature (in G1).
-};
-typedef struct proxy_signature_struct *proxy_signature_ptr;
-typedef struct proxy_signature_struct proxy_signature_t[1];
+#include "data.h"
 
 /**
  * @brief Get the size of the non generic dlog secure size based on the NIST suggestions.
@@ -87,9 +23,9 @@ unsigned int non_generic_dlog_secure_size_by_security_level(unsigned int sec_lvl
  * @param data data to be hashed.
  * @param len length of the data buffer in bytes.
  * @param hash_type hash algorithm to be used.
- * @return unsigned short length of the digest in bytes.
+ * @return uint16_t length of the digest in bytes.
  */
-unsigned short hash(uint8_t digest[MAX_DIGEST_SIZE], const void *data, size_t len, hash_type_t hash_type);
+uint16_t hash(uint8_t digest[MAX_DIGEST_SIZE], const void *data, size_t len, hash_type_t hash_type);
 
 /**
  * @brief Generate the digest of the element using the hash_type algorithm
@@ -97,28 +33,9 @@ unsigned short hash(uint8_t digest[MAX_DIGEST_SIZE], const void *data, size_t le
  * @param digest output digest obtained by applying the hash_type algorithm to the element.
  * @param e element to be hashed.
  * @param hash_type hash algorithm to be used.
- * @return unsigned short length of the digest in bytes.
+ * @return uint16_t length of the digest in bytes.
  */
-unsigned short hash_element(uint8_t digest[MAX_DIGEST_SIZE], element_t e, hash_type_t hash_type);
-
-/**
- * @brief Serialize a warrant structure converting it into a byte array.
- * This allows for easy hashing and storage of the warrant.
- *
- * @param buffer buffer to store the serialized warrant. It must be at least IDENTITY_SIZE * 2 bytes long.
- * @param m warrant structure to be serialized.
- * @return unsigned short size of the serialized warrant.
- */
-unsigned short serialize_warrant(uint8_t buffer[WARRANT_SIZE], const warrant_t m);
-
-/**
- * @brief Deserialize a warrant structure converting it from a byte array to a warrant structure.
- *
- * @param m warrant structure to be serialized.
- * @param buffer buffer to store the serialized warrant.
- * @return unsigned short size of the serialized warrant.
- */
-unsigned short deserialize_warrant(warrant_t m, const uint8_t buffer[WARRANT_SIZE]);
+uint16_t hash_element(uint8_t digest[MAX_DIGEST_SIZE], element_t e, hash_type_t hash_type);
 
 /**
  * @brief hash both the warrant and the random value r and return the result in h, an element of Zq*.
@@ -257,36 +174,5 @@ int del_verify(delegation_t w, sv_identity_t identity, sv_public_params_t public
  */
 void pk_gen(element_t k_sign, element_t sk, delegation_t w, sv_public_params_t public_p);
 
-/**
- * @brief Clear the public param struct.
- * Makes sure all elements are cleared.
- *
- * @param public_p Parameters public publicly.
- */
-void public_param_clear(sv_public_params_t public_p);
-
-/**
- * @brief Clear the secret param struct.
- * Make sure all elements are cleared.
- *
- * @param secret_p Parameters known only by the original signer.
- */
-void secret_param_clear(sv_secret_params_t secret_p);
-
-/**
- * @brief Clear the warrant struct.
- * Make sure all elements are cleared.
- *
- * @param w Warrant to be cleared.
- */
-void delegation_clear(delegation_t w);
-
-/**
- * @brief Clear the proxy signature struct.
- * Make sure all elements are cleared.
- *
- * @param p_sig Proxy signature to be cleared.
- */
-void proxy_signature_clear(proxy_signature_t p_sig);
 
 #endif // SHARED_H

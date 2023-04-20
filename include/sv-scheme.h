@@ -32,6 +32,6 @@ void p_sign(proxy_signature_t p_sig, element_t k_sign, delegation_t w, const uin
  * @param ps proxy signature to be verified.
  * @param public_p All the public parameters of the scheme.
  */
-unsigned short sign_verify(uint8_t msg[], proxy_signature_t p_sig, sv_public_params_t public_p);
+uint16_t sign_verify(uint8_t msg[], proxy_signature_t p_sig, sv_public_params_t public_p);
 
 #endif // SV_SCHEME_H

@@ -31,6 +31,6 @@ void imp_p_sign(proxy_signature_t p_sig, element_t k_sign, delegation_t w, const
  * @param ps proxy signature to be verified.
  * @param public_p All the public parameters of the scheme.
  */
-unsigned short imp_sign_verify(uint8_t msg[], proxy_signature_t p_sig, sv_public_params_t public_p);
+uint16_t imp_sign_verify(uint8_t msg[], proxy_signature_t p_sig, sv_public_params_t public_p);
 
 #endif // IMP_SV_SCHEME_H

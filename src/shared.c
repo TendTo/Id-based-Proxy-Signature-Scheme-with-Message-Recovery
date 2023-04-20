@@ -15,7 +15,7 @@ unsigned int non_generic_dlog_secure_size_by_security_level(unsigned int level)
         return 15360;
 }
 
-unsigned short hash(uint8_t digest[MAX_DIGEST_SIZE], const void *data, size_t len, hash_type_t hash_type)
+uint16_t hash(uint8_t digest[MAX_DIGEST_SIZE], const void *data, size_t len, hash_type_t hash_type)
 {
     switch (hash_type)
     {
@@ -42,26 +42,12 @@ unsigned short hash(uint8_t digest[MAX_DIGEST_SIZE], const void *data, size_t le
     }
 }
 
-unsigned short hash_element(uint8_t digest[MAX_DIGEST_SIZE], element_t e, hash_type_t hash_type)
+uint16_t hash_element(uint8_t digest[MAX_DIGEST_SIZE], element_t e, hash_type_t hash_type)
 {
     int len = element_length_in_bytes(e);
     uint8_t element_buffer[len];
     element_to_bytes(element_buffer, e);
     return hash(digest, element_buffer, len, hash_type);
-}
-
-unsigned short serialize_warrant(uint8_t buffer[WARRANT_SIZE], const warrant_t m)
-{
-    memcpy(buffer, m->from, IDENTITY_SIZE);
-    memcpy(buffer + IDENTITY_SIZE, m->to, IDENTITY_SIZE);
-    return WARRANT_SIZE;
-}
-
-unsigned short deserialize_warrant(warrant_t m, const uint8_t buffer[WARRANT_SIZE])
-{
-    memcpy(m->from, buffer, IDENTITY_SIZE);
-    memcpy(m->to, buffer + IDENTITY_SIZE, IDENTITY_SIZE);
-    return WARRANT_SIZE;
 }
 
 void hash_warrant_and_r(element_t h, element_t r, warrant_t m, hash_type_t hash_type)
@@ -71,7 +57,7 @@ void hash_warrant_and_r(element_t h, element_t r, warrant_t m, hash_type_t hash_
     uint8_t h_buffer[WARRANT_SIZE + size];
     element_to_bytes(h_buffer + WARRANT_SIZE, r);
     serialize_warrant(h_buffer, m);
-    unsigned short digest_size = hash(digest, h_buffer, WARRANT_SIZE + size, hash_type);
+    uint16_t digest_size = hash(digest, h_buffer, WARRANT_SIZE + size, hash_type);
     element_from_hash(h, digest, digest_size);
 }
 
@@ -200,7 +186,7 @@ void extract_p(element_t pk_id, const sv_identity_t identity, sv_public_params_t
 {
     // Hashing
     uint8_t digest[MAX_DIGEST_SIZE];
-    unsigned short digest_len = hash(digest, identity, IDENTITY_SIZE, public_p->hash_type);
+    uint16_t digest_len = hash(digest, identity, IDENTITY_SIZE, public_p->hash_type);
 
     // Generating pk for the user
     element_init_G1(pk_id, public_p->pairing);
@@ -211,7 +197,7 @@ void extract_s(element_t sk_id, const sv_identity_t identity, sv_secret_params_t
 {
     // Hashing
     uint8_t digest[MAX_DIGEST_SIZE];
-    unsigned short digest_len = hash(digest, identity, IDENTITY_SIZE, secret_p->public_params->hash_type);
+    uint16_t digest_len = hash(digest, identity, IDENTITY_SIZE, secret_p->public_params->hash_type);
 
     // Generating sk for the user
     element_init_G1(sk_id, secret_p->public_params->pairing);
@@ -226,8 +212,6 @@ void delegate(delegation_t w, element_t sk, warrant_t m, sv_public_params_t publ
     element_t k, h, temp;
     element_init_Zr(k, public_p->pairing);
     element_init_Zr(h, public_p->pairing);
-    element_init_GT(w->r, public_p->pairing);
-    element_init_G1(w->S, public_p->pairing);
     element_init_G1(temp, public_p->pairing);
 
     // k <- Zr (random in Zr)
@@ -293,29 +277,4 @@ void pk_gen(element_t k_sign, element_t sk, delegation_t w, sv_public_params_t p
     element_add(k_sign, k_sign, w->S);
 
     element_clear(h);
-}
-
-void public_param_clear(sv_public_params_t public_p)
-{
-    element_clear(public_p->P);
-    element_clear(public_p->pk);
-    pairing_clear(public_p->pairing);
-}
-
-void secret_param_clear(sv_secret_params_t secret_p)
-{
-    element_clear(secret_p->msk);
-}
-
-void delegation_clear(delegation_t w)
-{
-    element_clear(w->r);
-    element_clear(w->S);
-}
-
-void proxy_signature_clear(proxy_signature_t p_sig)
-{
-    element_clear(p_sig->r);
-    element_clear(p_sig->U);
-    element_clear(p_sig->V);
 }
