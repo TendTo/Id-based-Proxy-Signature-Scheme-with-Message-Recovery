@@ -1,0 +1,58 @@
+name: Deploy CI
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: apt-get install -y check gmp nettle
+    
+      - name: Build pbc
+        run: |
+          git clone https://github.com/blynn/pbc.git
+          cd pbc
+          ./configure
+          make
+          make install
+          cd ..
+
+      - name: Test
+        run: |
+          make test
+
+  docs:
+    needs: test
+
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    permissions:
+      pages: write # to deploy to Pages
+      id-token: write # to verify the deployment originates from an appropriate source
+
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Pages
+        uses: actions/configure-pages@v2
+     
+      - name: Run doxygen
+        uses: mattnotmitt/doxygen-action@v1.9.5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: "docs/html"
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
