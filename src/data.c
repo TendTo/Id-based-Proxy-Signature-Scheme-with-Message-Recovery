@@ -30,24 +30,23 @@ uint16_t deserialize_warrant(warrant_t m, const uint8_t buffer[WARRANT_SIZE])
 int serialize_delegation(uint8_t **data, delegation_t w)
 {
     int r_len = element_length_in_bytes(w->r);
-    int S_len = element_length_in_bytes(w->S);
+    int S_len = element_length_in_bytes_compressed(w->S);
     int len = r_len + S_len + sizeof(w->m->from) + sizeof(w->m->to);
-    int offset = 0;
     *data = malloc(len);
     serialize_warrant(*data, w->m);
-    offset = sizeof(w->m->from) + sizeof(w->m->to);
+    int offset = sizeof(w->m->from) + sizeof(w->m->to);
     element_to_bytes(*data + offset, w->r);
-    element_to_bytes(*data + offset + r_len, w->S);
+    offset += r_len;
+    element_to_bytes_compressed(*data + offset, w->S);
     return len;
 }
 
 void deserialize_delegation(delegation_t w, uint8_t data[])
 {
-    int r_len = element_length_in_bytes_compressed(w->r);
-    int offset = 0;
+    int r_len = element_length_in_bytes(w->r);
     deserialize_warrant(w->m, data);
-    offset = sizeof(w->m->from) + sizeof(w->m->to);
-    element_from_bytes_compressed(w->r, data + offset);
+    int offset = sizeof(w->m->from) + sizeof(w->m->to);
+    element_from_bytes(w->r, data + offset);
     offset += r_len;
     element_from_bytes_compressed(w->S, data + offset);
 }
@@ -68,34 +67,32 @@ void delegation_fprintf(FILE *stream, delegation_t w)
 
 int serialize_proxy_signature(uint8_t **data, proxy_signature_t p_sig)
 {
-    int r_len = element_length_in_bytes_compressed(p_sig->r);
+    int r_len = element_length_in_bytes(p_sig->r);
     int U_len = element_length_in_bytes_compressed(p_sig->U);
-    int V_len = element_length_in_bytes_compressed(p_sig->V);
+    int V_len = element_length_in_bytes(p_sig->V);
     int len = r_len + U_len + V_len + sizeof(p_sig->m->from) + sizeof(p_sig->m->to);
-    int offset = 0;
     *data = malloc(len);
     serialize_warrant(*data, p_sig->m);
-    offset = sizeof(p_sig->m->from) + sizeof(p_sig->m->to);
-    element_to_bytes_compressed(*data + offset, p_sig->r);
+    int offset = sizeof(p_sig->m->from) + sizeof(p_sig->m->to);
+    element_to_bytes(*data + offset, p_sig->r);
     offset += r_len;
     element_to_bytes_compressed(*data + offset, p_sig->U);
     offset += U_len;
-    element_to_bytes_compressed(*data + offset, p_sig->V);
+    element_to_bytes(*data + offset, p_sig->V);
     return len;
 }
 
 void deserialize_proxy_signature(proxy_signature_t p_sign, uint8_t data[])
 {
-    int r_len = element_length_in_bytes_compressed(p_sign->r);
+    int r_len = element_length_in_bytes(p_sign->r);
     int U_len = element_length_in_bytes_compressed(p_sign->U);
-    int offset = 0;
     deserialize_warrant(p_sign->m, data);
-    offset = sizeof(p_sign->m->from) + sizeof(p_sign->m->to);
-    element_from_bytes_compressed(p_sign->r, data + offset);
+    int offset = sizeof(p_sign->m->from) + sizeof(p_sign->m->to);
+    element_from_bytes(p_sign->r, data + offset);
     offset += r_len;
     element_from_bytes_compressed(p_sign->U, data + offset);
     offset += U_len;
-    element_from_bytes_compressed(p_sign->V, data + offset);
+    element_from_bytes(p_sign->V, data + offset);
 }
 
 void proxy_signature_printf(proxy_signature_t p_sign)
