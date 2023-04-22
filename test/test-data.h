@@ -1,3 +1,9 @@
+/**
+ * @file test-data.h
+ * @author TendTo (https://github.com/TendTo)
+ *
+ * @brief Test the data module
+ */
 #ifndef TEST_DATA_H
 #define TEST_DATA_H
 

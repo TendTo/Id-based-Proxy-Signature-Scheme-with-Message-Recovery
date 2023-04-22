@@ -1,3 +1,9 @@
+/**
+ * @file sv-scheme.h
+ * @author TendTo (https://github.com/TendTo)
+ *
+ * @brief Header file containing the functions to implement the base SV-Scheme.
+ */
 #ifndef SV_SCHEME_H
 #define SV_SCHEME_H
 

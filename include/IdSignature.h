@@ -3,9 +3,8 @@
  * @author TendTo (https://github.com/TendTo)
  *
  * @brief Main file header
- * The execution of the application starts here
+ * Demo application for the implementation of the SV-Scheme and it's improved version.
  */
-
 #ifndef MAIN_H
 #define MAIN_H
 

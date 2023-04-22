@@ -1,3 +1,9 @@
+/**
+ * @file imp-sv-scheme.h
+ * @author TendTo (https://github.com/TendTo)
+ *
+ * @brief Header file containing the functions to implement the improved SV-Scheme.
+ */
 #ifndef IMP_SV_SCHEME_H
 #define IMP_SV_SCHEME_H
 

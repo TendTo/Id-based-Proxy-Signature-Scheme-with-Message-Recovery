@@ -1,3 +1,9 @@
+/**
+ * @file bench-const.h
+ * @author TendTo (https://github.com/TendTo)
+ *
+ * @brief Benchmark constants
+ */
 #ifndef BENCH_CONST_H
 #define BENCH_CONST_H
 

@@ -1,3 +1,9 @@
+/**
+ * @file bench-sv.h
+ * @author TendTo (https://github.com/TendTo)
+ *
+ * @brief Benchmark the functions used in the sv-scheme
+ */
 #ifndef BENCH_SV_H
 #define BENCH_SV_H
 

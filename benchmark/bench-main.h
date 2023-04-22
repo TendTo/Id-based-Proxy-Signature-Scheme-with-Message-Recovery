@@ -1,3 +1,9 @@
+/**
+ * @file bench-main.h
+ * @author TendTo (https://github.com/TendTo)
+ *
+ * @brief Entry point for the benchmark suite
+ */
 #ifndef BENCH_MAIN_H
 #define BENCH_MAIN_H
 

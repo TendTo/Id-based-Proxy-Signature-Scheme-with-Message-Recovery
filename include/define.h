@@ -1,3 +1,9 @@
+/**
+ * @file define.h
+ * @author TendTo (https://github.com/TendTo)
+ *
+ * @brief Header file containing some utility macros and constants.
+ */
 #ifndef DEFINE_H
 #define DEFINE_H
 
@@ -23,7 +29,6 @@ Operations:\n\
 \tpk_gen <pairing params> <key> <delegation file>                    -  generate a signing key the delegated user can use to sign on behalf of the original user\n\
 \tp_sign <pairing params> <delegation file>  <p_sig file> <message>  -  sign the provided message with the proxy key in the provided file\n\
 \tsign_verify <pairing params> <delegation file> <signature file>    -  verify the signature in the provided file\n"
-
 
 // Help tooltip
 #define HELP_TOOLTIP \
@@ -55,7 +60,7 @@ Options:\n\
     if (verbose)             \
     {                        \
         printf(__VA_ARGS__); \
-    }                        
+    }
 #else
 #define VERBOSE_PRINT(...)
 #endif

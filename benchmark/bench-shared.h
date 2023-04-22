@@ -1,3 +1,9 @@
+/**
+ * @file bench-shared.h
+ * @author TendTo (https://github.com/TendTo)
+ *
+ * @brief Benchmark the functions used in both schemes
+ */
 #ifndef BENCH_SHARED_H
 #define BENCH_SHARED_H
 

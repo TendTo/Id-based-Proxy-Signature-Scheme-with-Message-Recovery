@@ -1,3 +1,9 @@
+/**
+ * @file shared.h
+ * @author TendTo (https://github.com/TendTo)
+ *
+ * @brief Header file containing the functions used by both scheme's implementations.
+ */
 #ifndef SHARED_H
 #define SHARED_H
 
@@ -108,7 +114,7 @@ void setup_from_str(sv_public_params_t public_p, sv_secret_params_t secret_p, ch
 
 /**
  * @brief Apply all possible precomputations on the public parameters.
- * 
+ *
  * @param public_p All the public parameters of the scheme.
  */
 void public_params_pp(sv_public_params_t public_p);
@@ -179,6 +185,5 @@ int del_verify(delegation_t w, sv_public_params_t public_p);
  * @warning The delegated user must have the secret key initialized.
  */
 void pk_gen(element_t k_sign, sv_user_t user, delegation_t w, sv_public_params_t public_p);
-
 
 #endif // SHARED_H

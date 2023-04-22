@@ -1,3 +1,9 @@
+/**
+ * @file test-main.h
+ * @author TendTo (https://github.com/TendTo)
+ *
+ * @brief Entry point for the test suite
+ */
 #ifndef TEST_MAIN_H
 #define TEST_MAIN_H
 

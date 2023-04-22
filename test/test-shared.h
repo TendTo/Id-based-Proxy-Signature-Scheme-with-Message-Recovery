@@ -1,3 +1,9 @@
+/**
+ * @file test-shared.h
+ * @author TendTo (https://github.com/TendTo)
+ *
+ * @brief Test the shared module
+ */
 #ifndef TEST_SHARED_H
 #define TEST_SHARED_H
 

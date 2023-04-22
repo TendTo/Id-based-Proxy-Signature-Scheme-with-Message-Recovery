@@ -1,3 +1,9 @@
+/**
+ * @file bench-imp-sv.h
+ * @author TendTo (https://github.com/TendTo)
+ *
+ * @brief Benchmark the functions used in the imp-sv-scheme
+ */
 #ifndef BENCH_IMP_SV_H
 #define BENCH_IMP_SV_H
 

@@ -1,3 +1,9 @@
+/**
+ * @file data.h
+ * @author TendTo (https://github.com/TendTo)
+ *
+ * @brief Header file containing the data structures used by the scheme and the functions used to manage them.
+ */
 #ifndef DATA_H
 #define DATA_H
 
@@ -147,16 +153,86 @@ uint16_t serialize_warrant(uint8_t buffer[WARRANT_SIZE], const warrant_t m);
  */
 uint16_t deserialize_warrant(warrant_t m, const uint8_t buffer[WARRANT_SIZE]);
 
+/**
+ * @brief Serialize the delegation structure converting it into a byte array.
+ * The buffer is allocated inside the function and must be freed by the caller.
+ *
+ * @param data newly allocated buffer containing the serialized delegation.
+ * @param w delegation structure to be serialized.
+ * @return length of the serialized delegation.
+ */
 int serialize_delegation(uint8_t **data, delegation_t w);
+
+/**
+ * @brief Read a serialized delegation from a buffer and deserialize it, obtaining a delegation structure.
+ *
+ * @param w delegation structure read from the buffer.
+ * @param data buffer containing the serialized delegation.
+ */
 void deserialize_delegation(delegation_t w, uint8_t data[]);
+
+/**
+ * @brief Read a serialized delegation from a file and deserialize it, obtaining a delegation structure.
+ *
+ * @param w delegation structure read from the file.
+ * @param file_path path to the file containing the serialized delegation.
+ */
 void deserialize_delegation_from_file(delegation_t w, const char file_path[]);
+
+/**
+ * @brief Print the delegation structure to stdout in binary format.
+ *
+ * @param w delegation structure to be printed.
+ */
 void delegation_printf(delegation_t w);
+
+/**
+ * @brief Print the delegation structure to the provided stream in binary format.
+ *
+ * @param stream file stream where to print the delegation structure.
+ * @param w delegation structure to be printed.
+ */
 void delegation_fprintf(FILE *stream, delegation_t w);
 
+/**
+ * @brief Serialize the proxy signature structure converting it into a byte array.
+ * The buffer is allocated inside the function and must be freed by the caller.
+ *
+ * @param data buffer to store the serialized proxy signature.
+ * @param p_sign proxy signature structure to be serialized.
+ * @return length of the serialized proxy signature.
+ */
 int serialize_proxy_signature(uint8_t **data, proxy_signature_t p_sign);
+
+/**
+ * @brief Read a serialized proxy signature from a buffer and deserialize it, obtaining a proxy signature structure.
+ *
+ * @param p_sign proxy signature structure read from the buffer.
+ * @param data buffer containing the serialized proxy signature.
+ */
 void deserialize_proxy_signature(proxy_signature_t p_sign, uint8_t data[]);
+
+/**
+ * @brief Read a serialized proxy signature from a file and deserialize it, obtaining a proxy signature structure.
+ *
+ * @param p_sig proxy signature structure read from the file.
+ * @param file_path path to the file containing the serialized proxy signature.
+ */
 void deserialize_proxy_signature_from_file(proxy_signature_t p_sig, const char file_path[]);
+
+/**
+ * @brief Print the proxy signature structure to stdout in binary format.
+ *
+ * @param p_sign proxy signature structure to be printed.
+ */
 void proxy_signature_printf(proxy_signature_t p_sign);
+
+/**
+ * @brief Print the proxy signature structure to the provided stream in binary format.
+ *
+ * @param stream file stream where to print the proxy signature structure.
+ * @param p_sign proxy signature structure to be printed.
+ */
 void proxy_signature_fprintf(FILE *stream, proxy_signature_t p_sign);
 
 /**
@@ -199,4 +275,4 @@ void delegation_clear(delegation_t w);
  */
 void proxy_signature_clear(proxy_signature_t p_sig);
 
-#endif
+#endif // DATA_H

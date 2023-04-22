@@ -5,7 +5,6 @@
  * @brief Constants used in the tests
  * Those are constants used in the various tests, usually some form of expected result
  */
-
 #ifndef TEST_CONST_H
 #define TEST_CONST_H
 
