@@ -29,6 +29,7 @@ void user_init(sv_user_t user, const sv_identity_t identity, sv_public_params_t 
     element_init_G1(user->sk, public_p->pairing);
     element_set0(user->pk);
     element_set0(user->sk);
+    user->sk_pp->data = NULL;
 }
 
 void user_init_str(sv_user_t user, const char identity[], sv_public_params_t public_p)
@@ -190,11 +191,12 @@ void secret_param_clear(sv_secret_params_t secret_p)
     element_clear(secret_p->msk);
 }
 
-void user_clear(sv_user_t user_k)
+void user_clear(sv_user_t user)
 {
-    element_clear(user_k->sk);
-    element_clear(user_k->pk);
-    // TODO: precompute clear?
+    element_clear(user->sk);
+    element_clear(user->pk);
+    if (user->sk_pp->data)
+        element_pp_clear(user->sk_pp);
 }
 
 void delegation_clear(delegation_t w)

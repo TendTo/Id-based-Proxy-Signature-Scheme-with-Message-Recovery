@@ -180,6 +180,7 @@ void bench_shared(bench_param_t bench_p)
 {
     printf("Benchmarks for the shared parts of the SV scheme...\n");
     bench_setup(bench_p);
+    bench_public_params_pp(bench_p);
     bench_extract_p(bench_p);
     bench_extract_s(bench_p);
     bench_delegate(bench_p);
