@@ -1,3 +1,4 @@
+# Inspired by c-project-template (https://github.com/tiborsimon/c-project-template)
 CONFIG_FILE := Makefile.conf
 -include $(CONFIG_FILE)
 

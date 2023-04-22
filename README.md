@@ -144,22 +144,37 @@ You can run it directly or use the `run.sh` script, which will keep checking for
 
 ```shell
 # Generate the system parameters and store them in the provided file
-./run.sh setup -o setup_file
+./run.sh setup -o setup.txt
 ```
 
 ```shell
 # Generate the keys associated with the provided identities
-./run.sh keygen "$(<setup_file)" user_id [... user_id] -o keys_file
+./run.sh keygen "$(<setup.txt)" user_id [... user_id] -o keys.txt
 ```
 
 ```shell
 # Generate the delegation from 'from_user' to 'to_user' using the private key of 'from_user' in the form [x, y] obtained from the keygen operation
-./run.sh delegate "$(<setup)" "[x, y]" from_user to_user
+./run.sh delegate "$(<setup.txt)" "[x, y]" from_user to_user -o delegation.bin
 ```
 
 ```shell
-# Verifies that the delegation is actually from 'from_user' to 'to_user' by providing the values 'r' and 'S' obtained from the delegate operation
-./run.sh del_verify "$(<setup)" "[r_x, r_y]" "[s_x, s_y]" from_user to_user
+# Verifies that the delegation is actually from 'from_user' to 'to_user' by providing the path to the file storing it
+./run.sh del_verify "$(<setup.txt)" delegation.bin
+```
+
+```shell
+# Generate the signature key. It will be used by the delegated user to sign a message on behalf of the delegator
+./run.sh pk_gen "$(<setup.txt)" "[x, y]" delegation.bin -o p_sig.txt
+```
+
+```shell
+# Sign a message on behalf of the delegator
+./run.sh p_sign "$(<setup.txt)" delegation.bin "$(<p_sig.txt)" message -o signature.bin
+```
+
+```shell
+# Verify the signature
+./run.sh sign_verify "$(<setup.txt)" delegation.bin signature.bin
 ```
 
 ## Documentation
@@ -172,5 +187,7 @@ A slightly more in depth explanation can be found in the [docs folder](docs/READ
 - [ID-based proxy signature scheme with message recovery](https://www.sciencedirect.com/science/article/abs/pii/S0164121211002159)
 - [An Improved ID-based Proxy Signature Scheme with Message Recovery](https://www.researchgate.net/publication/283648628_An_Improved_ID-based_Proxy_Signature_Scheme_with_Message_Recovery)
 - [PBC](https://crypto.stanford.edu/pbc/)
+- [Nettle](https://www.lysator.liu.se/~nisse/nettle/)
 - [Mario di Raimondo](https://diraimondo.dmi.unict.it/)
 - [Crypto Engineering](https://diraimondo.dmi.unict.it/teaching/crypto/)
+- [c-project-template](https://github.com/tiborsimon/c-project-template)
