@@ -6,18 +6,17 @@ static void bench_p_sign(bench_param_t bench_p)
 {
     sv_public_params_t public_p;
     sv_secret_params_t secret_p;
-    element_t sk, k_sign;
-    warrant_t m;
+    sv_user_t user;
+    element_t k_sign;
     delegation_t w;
     proxy_signature_t p_sig;
 
     setup(public_p, secret_p, bench_p->sec_lvl, bench_p->hash_type);
-    extract_s(sk, BENCH_IDENTITY, secret_p);
-    memcpy(m->from, BENCH_IDENTITY, IDENTITY_SIZE);
-    memcpy(m->to, BENCH_IDENTITY, IDENTITY_SIZE);
+    user_init(user, BENCH_IDENTITY, public_p);
+    extract_s(user, secret_p);
     delegation_init(w, public_p);
-    delegate(w, sk, m, public_p);
-    pk_gen(k_sign, sk, w, public_p);
+    delegate(w, user, user, public_p);
+    pk_gen(k_sign, user, w, public_p);
     proxy_signature_init(p_sig, public_p);
 
     perform_wc_time_sampling_period(
@@ -29,7 +28,7 @@ static void bench_p_sign(bench_param_t bench_p)
     printf_stats("\tp_sign", bench_p->bench_stats, "");
     printf(SEPARATOR);
 
-    element_clear(sk);
+    user_clear(user);
     element_clear(k_sign);
     proxy_signature_clear(p_sig);
     delegation_clear(w);
@@ -41,18 +40,17 @@ static void bench_sign_verify(bench_param_t bench_p)
 {
     sv_public_params_t public_p;
     sv_secret_params_t secret_p;
-    element_t sk, k_sign;
-    warrant_t m;
+    sv_user_t user;
+    element_t k_sign;
     delegation_t w;
     proxy_signature_t p_sig;
 
     setup(public_p, secret_p, bench_p->sec_lvl, bench_p->hash_type);
-    extract_s(sk, BENCH_IDENTITY, secret_p);
-    memcpy(m->from, BENCH_IDENTITY, IDENTITY_SIZE);
-    memcpy(m->to, BENCH_IDENTITY, IDENTITY_SIZE);
+    user_init(user, BENCH_IDENTITY, public_p);
+    extract_s(user, secret_p);
     delegation_init(w, public_p);
-    delegate(w, sk, m, public_p);
-    pk_gen(k_sign, sk, w, public_p);
+    delegate(w, user, user, public_p);
+    pk_gen(k_sign, user, w, public_p);
     proxy_signature_init(p_sig, public_p);
     p_sign(p_sig, k_sign, w, BENCH_IDENTITY, 32, public_p);
 
@@ -66,7 +64,7 @@ static void bench_sign_verify(bench_param_t bench_p)
     printf_stats("\tsign_verify", bench_p->bench_stats, "");
     printf(SEPARATOR);
 
-    element_clear(sk);
+    user_clear(user);
     element_clear(k_sign);
     proxy_signature_clear(p_sig);
     delegation_clear(w);

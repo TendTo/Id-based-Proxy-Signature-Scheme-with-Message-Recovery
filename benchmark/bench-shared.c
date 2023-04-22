@@ -24,19 +24,20 @@ static void bench_extract_p(bench_param_t bench_p)
 {
     sv_public_params_t public_p;
     sv_secret_params_t secret_p;
-    element_t pk;
+    sv_user_t user;
 
     setup(public_p, secret_p, bench_p->sec_lvl, bench_p->hash_type);
+    user_init(user, BENCH_IDENTITY, public_p);
     perform_wc_time_sampling_period(
         bench_p->bench_stats, bench_p->max_sampling_time, bench_p->max_samples, tu_millis,
-        { extract_p(pk, BENCH_IDENTITY, public_p); },
+        { extract_p(user, public_p); },
         {});
 
     printf_short_stats("\textract_p", bench_p->bench_stats, "");
     printf_stats("\textract_p", bench_p->bench_stats, "");
     printf(SEPARATOR);
 
-    element_clear(pk);
+    user_clear(user);
     secret_param_clear(secret_p);
     public_param_clear(public_p);
 }
@@ -45,19 +46,20 @@ static void bench_extract_s(bench_param_t bench_p)
 {
     sv_public_params_t public_p;
     sv_secret_params_t secret_p;
-    element_t sk;
+    sv_user_t user;
 
     setup(public_p, secret_p, bench_p->sec_lvl, bench_p->hash_type);
+    user_init(user, BENCH_IDENTITY, public_p);
     perform_wc_time_sampling_period(
         bench_p->bench_stats, bench_p->max_sampling_time, bench_p->max_samples, tu_millis,
-        { extract_s(sk, BENCH_IDENTITY, secret_p); },
+        { extract_s(user, secret_p); },
         {});
 
     printf_short_stats("\textract_s", bench_p->bench_stats, "");
     printf_stats("\textract_s", bench_p->bench_stats, "");
     printf(SEPARATOR);
 
-    element_clear(sk);
+    user_clear(user);
     secret_param_clear(secret_p);
     public_param_clear(public_p);
 }
@@ -66,25 +68,23 @@ static void bench_delegate(bench_param_t bench_p)
 {
     sv_public_params_t public_p;
     sv_secret_params_t secret_p;
-    element_t sk;
-    warrant_t m;
+    sv_user_t user;
     delegation_t w;
 
     setup(public_p, secret_p, bench_p->sec_lvl, bench_p->hash_type);
-    extract_s(sk, BENCH_IDENTITY, secret_p);
-    memcpy(m->from, BENCH_IDENTITY, IDENTITY_SIZE);
-    memcpy(m->to, BENCH_IDENTITY, IDENTITY_SIZE);
+    user_init(user, BENCH_IDENTITY, public_p);
+    extract_s(user, secret_p);
     delegation_init(w, public_p);
     perform_wc_time_sampling_period(
         bench_p->bench_stats, bench_p->max_sampling_time, bench_p->max_samples, tu_millis,
-        { delegate(w, sk, m, public_p); },
+        { delegate(w, user, user, public_p); },
         {});
 
     printf_short_stats("\tdelegate", bench_p->bench_stats, "");
     printf_stats("\tdelegate", bench_p->bench_stats, "");
     printf(SEPARATOR);
 
-    element_clear(sk);
+    user_clear(user);
     delegation_clear(w);
     secret_param_clear(secret_p);
     public_param_clear(public_p);
@@ -94,27 +94,25 @@ static void bench_pk_gen(bench_param_t bench_p)
 {
     sv_public_params_t public_p;
     sv_secret_params_t secret_p;
-    warrant_t m;
-    element_t sk, k_sign;
+    sv_user_t user;
+    element_t k_sign;
     delegation_t w;
 
-    memcpy(m->from, BENCH_IDENTITY, IDENTITY_SIZE);
-    memcpy(m->to, BENCH_IDENTITY, IDENTITY_SIZE);
-
     setup(public_p, secret_p, bench_p->sec_lvl, bench_p->hash_type);
-    extract_s(sk, BENCH_IDENTITY, secret_p);
+    user_init(user, BENCH_IDENTITY, public_p);
+    extract_s(user, secret_p);
     delegation_init(w, public_p);
-    delegate(w, sk, m, public_p);
+    delegate(w, user, user, public_p);
     perform_wc_time_sampling_period(
         bench_p->bench_stats, bench_p->max_sampling_time, bench_p->max_samples, tu_millis,
-        { pk_gen(k_sign, sk, w, public_p); },
+        { pk_gen(k_sign, user, w, public_p); },
         {});
 
     printf_short_stats("\tpk_gen", bench_p->bench_stats, "");
     printf_stats("\tpk_gen", bench_p->bench_stats, "");
     printf(SEPARATOR);
 
-    element_clear(sk);
+    user_clear(user);
     element_clear(k_sign);
     secret_param_clear(secret_p);
     public_param_clear(public_p);
@@ -124,26 +122,24 @@ static void bench_del_verify(bench_param_t bench_p)
 {
     sv_public_params_t public_p;
     sv_secret_params_t secret_p;
-    element_t sk;
-    warrant_t m;
+    sv_user_t user;
     delegation_t w;
 
     setup(public_p, secret_p, bench_p->sec_lvl, bench_p->hash_type);
-    extract_s(sk, BENCH_IDENTITY, secret_p);
-    memcpy(m->from, BENCH_IDENTITY, IDENTITY_SIZE);
-    memcpy(m->to, BENCH_IDENTITY, IDENTITY_SIZE);
+    user_init(user, BENCH_IDENTITY, public_p);
+    extract_s(user, secret_p);
     delegation_init(w, public_p);
-    delegate(w, sk, m, public_p);
+    delegate(w, user, user, public_p);
     perform_wc_time_sampling_period(
         bench_p->bench_stats, bench_p->max_sampling_time, bench_p->max_samples, tu_millis,
-        { del_verify(w, BENCH_IDENTITY, public_p); },
+        { del_verify(w, public_p); },
         {});
 
     printf_short_stats("\tdel_verify", bench_p->bench_stats, "");
     printf_stats("\tdel_verify", bench_p->bench_stats, "");
     printf(SEPARATOR);
 
-    element_clear(sk);
+    user_clear(user);
     delegation_clear(w);
     secret_param_clear(secret_p);
     public_param_clear(public_p);

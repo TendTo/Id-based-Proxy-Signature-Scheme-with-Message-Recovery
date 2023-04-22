@@ -30,7 +30,7 @@ struct bench_param_struct
 {
     elapsed_time_t time;
     stats_t bench_stats;
-    long max_samples;
+    size_t max_samples;
     long max_sampling_time;
     int sec_lvl;
     hash_type_t hash_type;
