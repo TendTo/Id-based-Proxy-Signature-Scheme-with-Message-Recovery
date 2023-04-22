@@ -25,6 +25,8 @@ static void data_setup_fixture()
     delegation_init(w, public_p);
     delegate(w, sk_a, m, public_p);
     pk_gen(k_sign, sk_b, w, public_p);
+    proxy_signature_init(p_sig, public_p);
+    p_sign(p_sig, k_sign, w, (uint8_t *)TEST_MESSAGE, strlen(TEST_MESSAGE), public_p);
 }
 
 static void data_teardown_fixture()
@@ -56,10 +58,8 @@ START_TEST(test_serialize_warrant)
     uint16_t size = serialize_warrant(warrant_buffer, m);
 
     ck_assert_int_eq(size, WARRANT_SIZE);
-    for (size_t i = 0; i < WARRANT_SIZE; i++)
-    {
-        ck_assert_int_eq(warrant_buffer[i], i);
-    }
+    ck_assert_mem_eq(warrant_buffer, m->from, IDENTITY_SIZE);
+    ck_assert_mem_eq(warrant_buffer + IDENTITY_SIZE, m->to, IDENTITY_SIZE);
 }
 END_TEST
 
@@ -86,21 +86,54 @@ END_TEST
 
 #pragma endregion
 
+#pragma region serialize_delegation
+
 START_TEST(test_serialize_delegation)
 {
     uint8_t *data;
 
-    int size = serialize_delegation(&data, w);
+    serialize_delegation(&data, w);
+    warrant_t m2;
     delegation_t w2;
+    w2->m = m2;
+    delegation_init(w2, public_p);
     deserialize_delegation(w2, data);
     ck_assert_int_eq(element_cmp(w->r, w2->r), 0);
     ck_assert_int_eq(element_cmp(w->S, w2->S), 0);
     ck_assert_mem_eq(w->m->from, w2->m->from, IDENTITY_SIZE);
     ck_assert_mem_eq(w->m->to, w2->m->to, IDENTITY_SIZE);
 
+    delegation_clear(w2);
     free(data);
 }
 END_TEST
+
+#pragma endregion
+
+#pragma region serialize_proxy_signature
+
+START_TEST(test_serialize_proxy_signature)
+{
+    uint8_t *data;
+
+    serialize_proxy_signature(&data, p_sig);
+    warrant_t m2;
+    proxy_signature_t p_sig2;
+    p_sig2->m = m2;
+    proxy_signature_init(p_sig2, public_p);
+    deserialize_proxy_signature(p_sig2, data);
+    ck_assert_int_eq(element_cmp(p_sig->r, p_sig2->r), 0);
+    ck_assert_int_eq(element_cmp(p_sig->U, p_sig2->U), 0);
+    ck_assert_int_eq(element_cmp(p_sig->V, p_sig2->V), 0);
+    ck_assert_mem_eq(p_sig->m->from, p_sig2->m->from, IDENTITY_SIZE);
+    ck_assert_mem_eq(p_sig->m->to, p_sig2->m->to, IDENTITY_SIZE);
+
+    proxy_signature_clear(p_sig2);
+    free(data);
+}
+END_TEST
+
+#pragma endregion
 
 #pragma region clear
 
@@ -215,6 +248,10 @@ Suite *data_suite()
     tcase_add_checked_fixture(tc_serialize_delegation, data_setup_fixture, data_teardown_fixture);
     tcase_add_test(tc_serialize_delegation, test_serialize_delegation);
 
+    TCase *tc_serialize_proxy_signature = tcase_create("serialize_proxy_signature");
+    tcase_add_checked_fixture(tc_serialize_proxy_signature, data_setup_fixture, data_teardown_fixture);
+    tcase_add_test(tc_serialize_proxy_signature, test_serialize_proxy_signature);
+
     TCase *tc_clear = tcase_create("clear");
     tcase_add_test(tc_clear, test_public_params_clear);
     tcase_add_test_raise_signal(tc_clear, test_public_params_already_cleared, SIGSEGV);
@@ -227,6 +264,7 @@ Suite *data_suite()
 
     suite_add_tcase(s, tc_serialize_warrant);
     suite_add_tcase(s, tc_serialize_delegation);
+    suite_add_tcase(s, tc_serialize_proxy_signature);
     suite_add_tcase(s, tc_clear);
 
     return s;

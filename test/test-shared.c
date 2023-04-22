@@ -9,10 +9,7 @@ START_TEST(test_hash)
     int digest_len = hash(digest, TEST_IDENTITY, IDENTITY_SIZE, hash_test.hash_type);
 
     ck_assert_int_eq(digest_len, hash_test.digest_size);
-    for (int i = 0; i < digest_len; i++)
-    {
-        ck_assert_int_eq(digest[i], hash_test.identity_digest[i]);
-    }
+    ck_assert_mem_eq(digest, hash_test.identity_digest, digest_len);
 }
 END_TEST
 
@@ -56,10 +53,7 @@ START_TEST(test_calculate_beta)
     setup(public_p, secret_p, 80, sha_256);
     calculate_beta(beta, (uint8_t *)TEST_MESSAGE, strlen(TEST_MESSAGE), public_p);
 
-    for (int i = 0; i < public_p->q; i++)
-    {
-        ck_assert_int_eq(beta[i], TEST_MESSAGE_DIGEST_SHA256[i]);
-    }
+    ck_assert_mem_eq(beta, TEST_MESSAGE_DIGEST_SHA256, public_p->q);
 }
 END_TEST
 

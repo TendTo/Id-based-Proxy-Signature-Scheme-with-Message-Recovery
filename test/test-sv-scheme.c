@@ -70,8 +70,7 @@ START_TEST(test_sign_verify_one_msg)
 
     p_sign(p_sig, k_sign, w, one_msg, public_p->l2, public_p);
     ck_assert(sign_verify(msg, p_sig, public_p));
-    for (int i = 0; i < public_p->l2; i++)
-        ck_assert_int_eq(msg[i], one_msg[i]);
+    ck_assert_mem_eq(msg, one_msg, public_p->l2);
 }
 END_TEST
 
@@ -84,8 +83,8 @@ START_TEST(test_sign_verify)
     p_sign(p_sig, k_sign, w, (uint8_t *)TEST_MESSAGE, strlen(TEST_MESSAGE), public_p);
 
     ck_assert(sign_verify(msg, p_sig, public_p));
-    for (size_t i = 0; i < strlen(TEST_MESSAGE) && i < (size_t)public_p->l2; i++)
-        ck_assert_int_eq(msg[i], TEST_MESSAGE[i]);
+    size_t min_len = strlen(TEST_MESSAGE) < (size_t)public_p->l2 ? strlen(TEST_MESSAGE) : (size_t)public_p->l2;
+    ck_assert_mem_eq(msg, TEST_MESSAGE, min_len);
 }
 END_TEST
 
