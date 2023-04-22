@@ -182,32 +182,31 @@ void setup_from_str(sv_public_params_t public_p, sv_secret_params_t secret_p, ch
     pbc_param_clear(pairing_p);
 }
 
-void extract_p(element_t pk_id, const sv_identity_t identity, sv_public_params_t public_p)
+void extract_p(sv_user_t user, sv_public_params_t public_p)
 {
     // Hashing
     uint8_t digest[MAX_DIGEST_SIZE];
-    uint16_t digest_len = hash(digest, identity, IDENTITY_SIZE, public_p->hash_type);
+    uint16_t digest_len = hash(digest, user->id, IDENTITY_SIZE, public_p->hash_type);
 
     // Generating pk for the user
-    element_init_G1(pk_id, public_p->pairing);
-    element_from_hash(pk_id, digest, digest_len);
+    element_from_hash(user->pk, digest, digest_len);
 }
 
-void extract_s(element_t sk_id, const sv_identity_t identity, sv_secret_params_t secret_p)
+void extract_s(sv_user_t user, sv_secret_params_t secret_p)
 {
     // Hashing
     uint8_t digest[MAX_DIGEST_SIZE];
-    uint16_t digest_len = hash(digest, identity, IDENTITY_SIZE, secret_p->public_params->hash_type);
+    uint16_t digest_len = hash(digest, user->id, IDENTITY_SIZE, secret_p->public_params->hash_type);
 
     // Generating sk for the user
-    element_init_G1(sk_id, secret_p->public_params->pairing);
-    element_from_hash(sk_id, digest, digest_len);
-    element_mul_zn(sk_id, sk_id, secret_p->msk);
+    element_from_hash(user->sk, digest, digest_len);
+    element_mul_zn(user->sk, user->sk, secret_p->msk);
 }
 
-void delegate(delegation_t w, element_t sk, warrant_t m, sv_public_params_t public_p)
+void delegate(delegation_t w, sv_user_t from, sv_user_t to, sv_public_params_t public_p)
 {
-    w->m = m;
+    memcpy(w->m->from, from->id, IDENTITY_SIZE);
+    memcpy(w->m->to, to->id, IDENTITY_SIZE);
 
     element_t k, h, temp;
     element_init_Zr(k, public_p->pairing);
@@ -222,10 +221,10 @@ void delegate(delegation_t w, element_t sk, warrant_t m, sv_public_params_t publ
     element_pow_zn(w->r, w->r, k);
 
     // h = H(m, ra) (in Zr)
-    hash_warrant_and_r(h, w->r, m, public_p->hash_type);
+    hash_warrant_and_r(h, w->r, w->m, public_p->hash_type);
 
     // S = h * sk + k * P (in G1)
-    element_mul_zn(w->S, sk, h);
+    element_mul_zn(w->S, from->sk, h);
     element_mul_zn(temp, public_p->P, k);
     element_add(w->S, w->S, temp);
 
@@ -234,36 +233,38 @@ void delegate(delegation_t w, element_t sk, warrant_t m, sv_public_params_t publ
     element_clear(temp);
 }
 
-int del_verify(delegation_t w, sv_identity_t identity, sv_public_params_t public_p)
+int del_verify(delegation_t w, sv_public_params_t public_p)
 {
-    element_t h, pk, left_el, right_el;
+    element_t h, left_el, right_el;
     element_init_Zr(h, public_p->pairing);
-    element_init_G1(pk, public_p->pairing);
     element_init_GT(left_el, public_p->pairing);
     element_init_GT(right_el, public_p->pairing);
 
-    hash_warrant_and_r(h, w->r, w->m, public_p->hash_type);
+    // The user who supposedly created the warrant for the delegated user
+    sv_user_t user;
+    user_init(user, w->m->from, public_p);
+    extract_p(user, public_p);
 
-    extract_p(pk, identity, public_p);
+    hash_warrant_and_r(h, w->r, w->m, public_p->hash_type);
 
     // e(S, P) = e(Pub, pk)^h * r
     element_pairing(left_el, w->S, public_p->P);
 
-    element_pairing(right_el, pk, public_p->pk);
+    element_pairing(right_el, user->pk, public_p->pk);
     element_pow_zn(right_el, right_el, h);
     element_mul(right_el, right_el, w->r);
 
     int res = element_cmp(left_el, right_el);
 
+    user_clear(user);
     element_clear(h);
-    element_clear(pk);
     element_clear(left_el);
     element_clear(right_el);
 
     return res == 0;
 }
 
-void pk_gen(element_t k_sign, element_t sk, delegation_t w, sv_public_params_t public_p)
+void pk_gen(element_t k_sign, sv_user_t user, delegation_t w, sv_public_params_t public_p)
 {
     element_t h;
     element_init_Zr(h, public_p->pairing);
@@ -273,7 +274,7 @@ void pk_gen(element_t k_sign, element_t sk, delegation_t w, sv_public_params_t p
     hash_warrant_and_r(h, w->r, w->m, public_p->hash_type);
 
     // k_sig = h * sk + S
-    element_mul_zn(k_sign, sk, h);
+    element_mul_zn(k_sign, user->sk, h);
     element_add(k_sign, k_sign, w->S);
 
     element_clear(h);

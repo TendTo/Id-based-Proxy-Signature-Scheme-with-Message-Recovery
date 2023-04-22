@@ -137,14 +137,16 @@ START_TEST(test_extract_p)
     const int sec_lvl = sec_levels[_i];
     sv_public_params_t public_p;
     sv_secret_params_t secret_p;
-    element_t pk_id;
+    sv_user_t user;
+
     setup(public_p, secret_p, sec_lvl, sha_1);
-    extract_p(pk_id, TEST_IDENTITY, public_p);
+    user_init(user, TEST_IDENTITY, public_p);
+    extract_p(user, public_p);
 
     element_t test_pk_id;
     element_init_G1(test_pk_id, public_p->pairing);
     element_from_hash(test_pk_id, (void *)TEST_IDENTITY_DIGEST_SHA1, SHA1_DIGEST_SIZE);
-    ck_assert(element_cmp(pk_id, test_pk_id) == 0);
+    ck_assert(element_cmp(user->pk, test_pk_id) == 0);
 }
 END_TEST
 
@@ -153,15 +155,17 @@ START_TEST(test_extract_s)
     const int sec_lvl = sec_levels[_i];
     sv_public_params_t public_p;
     sv_secret_params_t secret_p;
-    element_t sk_id;
+    sv_user_t user;
+
     setup(public_p, secret_p, sec_lvl, sha_1);
-    extract_s(sk_id, TEST_IDENTITY, secret_p);
+    user_init(user, TEST_IDENTITY, public_p);
+    extract_s(user, secret_p);
 
     element_t test_sk_id;
     element_init_G1(test_sk_id, public_p->pairing);
     element_from_hash(test_sk_id, (void *)TEST_IDENTITY_DIGEST_SHA1, SHA1_DIGEST_SIZE);
     element_mul_zn(test_sk_id, test_sk_id, secret_p->msk);
-    ck_assert(element_cmp(sk_id, test_sk_id) == 0);
+    ck_assert(element_cmp(user->sk, test_sk_id) == 0);
 }
 END_TEST
 
@@ -170,15 +174,17 @@ START_TEST(test_extract_relationship)
     const int sec_lvl = sec_levels[_i];
     sv_public_params_t public_p;
     sv_secret_params_t secret_p;
-    element_t pk_id, sk_id, temp;
+    sv_user_t user;
+    element_t temp;
 
     setup(public_p, secret_p, sec_lvl, sha_1);
-    extract_p(pk_id, TEST_IDENTITY, public_p);
-    extract_s(sk_id, TEST_IDENTITY, secret_p);
+    user_init(user, TEST_IDENTITY, public_p);
+    extract_p(user, public_p);
+    extract_s(user, secret_p);
 
     element_init_G1(temp, public_p->pairing);
-    element_mul_zn(temp, pk_id, secret_p->msk);
-    ck_assert(element_cmp(sk_id, temp) == 0);
+    element_mul_zn(temp, user->pk, secret_p->msk);
+    ck_assert(element_cmp(user->sk, temp) == 0);
 }
 END_TEST
 
@@ -190,20 +196,18 @@ START_TEST(test_delegate)
 {
     sv_public_params_t public_p;
     sv_secret_params_t secret_p;
+    sv_user_t from, to;
     delegation_t w;
-    warrant_t m;
-    element_t sk;
-
-    memcpy(m->from, TEST_IDENTITY, IDENTITY_SIZE);
-    memcpy(m->to, TEST_IDENTITY_2, IDENTITY_SIZE);
 
     setup(public_p, secret_p, 80, sha_1);
-    element_init_G1(sk, public_p->pairing);
-    extract_s(sk, TEST_IDENTITY, secret_p);
+    user_init(from, TEST_IDENTITY, public_p);
+    user_init(to, TEST_IDENTITY_2, public_p);
+    extract_s(from, secret_p);
     delegation_init(w, public_p);
-    delegate(w, sk, m, public_p);
+    delegate(w, from, to, public_p);
 
-    ck_assert_ptr_eq(w->m, m);
+    ck_assert_mem_eq(w->m->from, from->id, IDENTITY_SIZE);
+    ck_assert_mem_eq(w->m->to, to->id, IDENTITY_SIZE);
     ck_assert(!element_is0(w->r));
     ck_assert(!element_is0(w->S));
 }
@@ -217,20 +221,17 @@ START_TEST(test_del_verify)
 {
     sv_public_params_t public_p;
     sv_secret_params_t secret_p;
+    sv_user_t from, to;
     delegation_t w;
-    warrant_t m;
-    element_t sk;
-
-    memcpy(m->from, TEST_IDENTITY, IDENTITY_SIZE);
-    memcpy(m->to, TEST_IDENTITY_2, IDENTITY_SIZE);
 
     setup(public_p, secret_p, 80, sha_1);
-    element_init_G1(sk, public_p->pairing);
-    extract_s(sk, TEST_IDENTITY, secret_p);
+    user_init(from, TEST_IDENTITY, public_p);
+    user_init(to, TEST_IDENTITY_2, public_p);
+    extract_s(from, secret_p);
     delegation_init(w, public_p);
-    delegate(w, sk, m, public_p);
+    delegate(w, from, to, public_p);
 
-    ck_assert(del_verify(w, TEST_IDENTITY, public_p));
+    ck_assert(del_verify(w, public_p));
 }
 END_TEST
 
@@ -238,43 +239,57 @@ START_TEST(test_del_verify_str)
 {
     sv_public_params_t public_p;
     sv_secret_params_t secret_p;
+    sv_user_t from, to;
     delegation_t w;
-    warrant_t m;
-    element_t sk;
-
-    memset(m, 0, sizeof(struct warrant_struct));
-    memcpy(m->from, "TEST_IDENTITY", STR_IDENTITY_SIZE("TEST_IDENTITY"));
-    memcpy(m->to, "TEST_IDENTITY_2", STR_IDENTITY_SIZE("TEST_IDENTITY"));
 
     setup(public_p, secret_p, 80, sha_1);
-    element_init_G1(sk, public_p->pairing);
-    extract_s(sk, m->from, secret_p);
+    user_init_str(from, "TEST_IDENTITY", public_p);
+    user_init_str(to, "TEST_IDENTITY", public_p);
+    extract_s(from, secret_p);
     delegation_init(w, public_p);
-    delegate(w, sk, m, public_p);
+    delegate(w, from, to, public_p);
 
-    ck_assert(del_verify(w, m->from, public_p));
+    ck_assert(del_verify(w, public_p));
 }
 END_TEST
 
-START_TEST(test_del_verify_fail)
+START_TEST(test_del_verify_fail_from)
 {
     sv_public_params_t public_p;
     sv_secret_params_t secret_p;
+    sv_user_t from, to;
     delegation_t w;
-    warrant_t m;
-    element_t sk;
-
-    memcpy(m->from, TEST_IDENTITY, IDENTITY_SIZE);
-    memcpy(m->to, TEST_IDENTITY_2, IDENTITY_SIZE);
 
     setup(public_p, secret_p, 80, sha_1);
-    element_init_G1(sk, public_p->pairing);
-    extract_s(sk, TEST_IDENTITY, secret_p);
+    user_init(from, TEST_IDENTITY, public_p);
+    user_init(to, TEST_IDENTITY_2, public_p);
+    extract_s(from, secret_p);
     delegation_init(w, public_p);
-    delegate(w, sk, m, public_p);
+    delegate(w, from, to, public_p);
 
     // Wrong identity as the one that delegated
-    ck_assert(!del_verify(w, TEST_IDENTITY_2, public_p));
+    memcpy(w->m->from, TEST_IDENTITY_2, IDENTITY_SIZE);
+    ck_assert(!del_verify(w, public_p));
+}
+END_TEST
+
+START_TEST(test_del_verify_fail_to)
+{
+    sv_public_params_t public_p;
+    sv_secret_params_t secret_p;
+    sv_user_t from, to;
+    delegation_t w;
+
+    setup(public_p, secret_p, 80, sha_1);
+    user_init(from, TEST_IDENTITY, public_p);
+    user_init(to, TEST_IDENTITY_2, public_p);
+    extract_s(from, secret_p);
+    delegation_init(w, public_p);
+    delegate(w, from, to, public_p);
+
+    // Wrong identity as the one delegated
+    memcpy(w->m->to, TEST_IDENTITY, IDENTITY_SIZE);
+    ck_assert(!del_verify(w, public_p));
 }
 END_TEST
 
@@ -286,22 +301,20 @@ START_TEST(test_pk_sign)
 {
     sv_public_params_t public_p;
     sv_secret_params_t secret_p;
+    sv_user_t from, to;
     delegation_t w;
-    warrant_t m;
-    element_t sk, k_sign;
-
-    memcpy(m->from, TEST_IDENTITY, IDENTITY_SIZE);
-    memcpy(m->to, TEST_IDENTITY_2, IDENTITY_SIZE);
+    element_t k_sign;
 
     setup(public_p, secret_p, 80, sha_1);
-    element_init_G1(sk, public_p->pairing);
-    extract_s(sk, TEST_IDENTITY, secret_p);
+    user_init(from, TEST_IDENTITY, public_p);
+    user_init(to, TEST_IDENTITY_2, public_p);
+    extract_s(from, secret_p);
     delegation_init(w, public_p);
-    delegate(w, sk, m, public_p);
+    delegate(w, from, to, public_p);
 
     element_init_G1(k_sign, public_p->pairing);
     element_set0(k_sign);
-    pk_gen(k_sign, sk, w, public_p);
+    pk_gen(k_sign, to, w, public_p);
 
     ck_assert(!element_is0(k_sign));
 }
@@ -340,7 +353,8 @@ Suite *utility_suite()
     TCase *tc_del_verify = tcase_create("del_verify");
     tcase_add_test(tc_del_verify, test_del_verify);
     tcase_add_test(tc_del_verify, test_del_verify_str);
-    tcase_add_test(tc_del_verify, test_del_verify_fail);
+    tcase_add_test(tc_del_verify, test_del_verify_fail_from);
+    tcase_add_test(tc_del_verify, test_del_verify_fail_to);
 
     TCase *tc_pk_sign = tcase_create("pk_sign");
     tcase_add_test(tc_pk_sign, test_pk_sign);

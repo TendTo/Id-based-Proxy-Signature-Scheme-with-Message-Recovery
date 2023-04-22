@@ -111,11 +111,10 @@ void setup_from_str(sv_public_params_t public_p, sv_secret_params_t secret_p, ch
  * It uses the hash function H0 to map the any string {0, 1}*, representing the identity,
  * to an element of G1: pk_id = H0(identity).
  *
- * @param pk_id Public key created for the user from their identifier.
- * @param identity Identity of the user of IDENTITY_SIZE bytes.
+ * @param user User struct that will contain the public key.
  * @param public_p All the public parameters of the scheme.
  */
-void extract_p(element_t pk_id, const sv_identity_t identity, sv_public_params_t public_p);
+void extract_p(sv_user_t user, sv_public_params_t public_p);
 
 /**
  * @brief Produces the secret key sk_id from an identity.
@@ -123,11 +122,10 @@ void extract_p(element_t pk_id, const sv_identity_t identity, sv_public_params_t
  * to an element of G1.
  * Then multiplies the master key sk with the result of the hash function: sk_id = sk * H0(identity).
  *
- * @param pk_id Private key created for the user from their identifier.
- * @param identity Identity of the user of IDENTITY_SIZE bytes.
+ * @param user User struct that will contain the secret key.
  * @param secret_p All the secret parameters of the user.
  */
-void extract_s(element_t sk_id, const sv_identity_t identity, sv_secret_params_t secret_p);
+void extract_s(sv_user_t user, sv_secret_params_t secret_p);
 
 /**
  * @brief Delegates the right to sign messages to the identity id.
@@ -138,11 +136,11 @@ void extract_s(element_t sk_id, const sv_identity_t identity, sv_secret_params_t
  * The resulting delegation is W = (m, r, S).
  *
  * @param w delegation to be created.
- * @param sk secret key of the user.
- * @param m warrant to be delegated.
+ * @param from user creating a delegation.
+ * @param to user receiving the delegation.
  * @param public_p All the public parameters of the scheme.
  */
-void delegate(delegation_t w, element_t sk, warrant_t m, sv_public_params_t public_p);
+void delegate(delegation_t w, sv_user_t from, sv_user_t to, sv_public_params_t public_p);
 
 /**
  * @brief Verifies the validity of a delegation.
@@ -154,11 +152,10 @@ void delegate(delegation_t w, element_t sk, warrant_t m, sv_public_params_t publ
  * In any other case, 0 is returned.
  *
  * @param w delegation to be verified.
- * @param identity identity of the user who supposedly created the delegation.
  * @param public_p All the public parameters of the scheme.
  * @return whether the delegation has been created by the `identity` user (1) or not (0).
  */
-int del_verify(delegation_t w, sv_identity_t identity, sv_public_params_t public_p);
+int del_verify(delegation_t w, sv_public_params_t public_p);
 
 /**
  * @brief Produces a proxy signing key from a delegation.
@@ -172,7 +169,7 @@ int del_verify(delegation_t w, sv_identity_t identity, sv_public_params_t public
  * @param w delegation that validates the proxy signing key.
  * @param public_p All the public parameters of the scheme.
  */
-void pk_gen(element_t k_sign, element_t sk, delegation_t w, sv_public_params_t public_p);
+void pk_gen(element_t k_sign, sv_user_t user, delegation_t w, sv_public_params_t public_p);
 
 
 #endif // SHARED_H

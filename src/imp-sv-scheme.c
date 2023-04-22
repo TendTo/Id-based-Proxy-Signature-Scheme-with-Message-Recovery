@@ -2,7 +2,7 @@
 
 void imp_p_sign(proxy_signature_t p_sig, element_t k_sign, delegation_t w, const uint8_t msg[], size_t msg_size, sv_public_params_t public_p)
 {
-    p_sig->m = w->m;
+    memcpy(p_sig->m, w->m, sizeof(w->m));
 
     element_t k, r_b, alpha, temp;
     element_init_GT(r_b, public_p->pairing);
@@ -45,7 +45,7 @@ void imp_p_sign(proxy_signature_t p_sig, element_t k_sign, delegation_t w, const
 
 uint16_t imp_sign_verify(uint8_t msg[], proxy_signature_t p_sig, sv_public_params_t public_p)
 {
-    element_t h, alpha, pk_a, pk_b, p_sum, p_1, p_2, V;
+    element_t h, alpha, p_sum, p_1, p_2, V;
     element_init_Zr(h, public_p->pairing);
     element_init_Zr(alpha, public_p->pairing);
     element_init_G1(p_sum, public_p->pairing);
@@ -53,8 +53,11 @@ uint16_t imp_sign_verify(uint8_t msg[], proxy_signature_t p_sig, sv_public_param
     element_init_GT(p_2, public_p->pairing);
     element_init_Zr(V, public_p->pairing);
 
-    extract_p(pk_a, p_sig->m->from, public_p);
-    extract_p(pk_b, p_sig->m->to, public_p);
+    sv_user_t from, to;
+    user_init(from, p_sig->m->from, public_p);
+    user_init(to, p_sig->m->to, public_p);
+    extract_p(from, public_p);
+    extract_p(to, public_p);
 
     hash_warrant_and_r(h, p_sig->r, p_sig->m, public_p->hash_type);
 
@@ -62,7 +65,7 @@ uint16_t imp_sign_verify(uint8_t msg[], proxy_signature_t p_sig, sv_public_param
     // p_1 = e(U, P)
     element_pairing(p_1, p_sig->U, public_p->P);
     // p_2 = e(pk_a + pk_b, Pub)^-Vh
-    element_add(p_sum, pk_a, pk_b);
+    element_add(p_sum, from->pk, to->pk);
     element_pairing(p_2, p_sum, public_p->pk);
     element_neg(V, p_sig->V);
     element_mul(h, V, h);
@@ -95,10 +98,10 @@ uint16_t imp_sign_verify(uint8_t msg[], proxy_signature_t p_sig, sv_public_param
     msg_digest[0] = 0;
     int res = memcmp(msg_digest, beta, public_p->l1);
 
+    user_clear(from);
+    user_clear(to);
     element_clear(h);
     element_clear(alpha);
-    element_clear(pk_a);
-    element_clear(pk_b);
     element_clear(p_1);
     element_clear(p_2);
     element_clear(p_sum);

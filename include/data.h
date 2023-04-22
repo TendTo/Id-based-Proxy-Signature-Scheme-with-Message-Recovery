@@ -3,6 +3,7 @@
 
 #include <string.h>
 #include <pbc/pbc.h>
+#include "define.h"
 
 #define IDENTITY_SIZE 32
 #define WARRANT_SIZE 64
@@ -30,6 +31,7 @@ struct sv_public_params_struct
     int l2;                // Half of number bits of an element in G1.
     int q;                 // Order of the group.
     hash_type_t hash_type; // Hash algorithm used by the scheme.
+    short precomputed;     // Flag to indicate if the precomputation has been done.
 };
 typedef struct sv_public_params_struct *sv_public_params_ptr;
 typedef struct sv_public_params_struct sv_public_params_t[1];
@@ -42,6 +44,15 @@ struct sv_secret_params_struct
 typedef struct sv_secret_params_struct *sv_secret_params_ptr;
 typedef struct sv_secret_params_struct sv_secret_params_t[1];
 
+struct sv_user_struct
+{
+    sv_identity_t id; // Identity of the user.
+    element_t sk;     // The secret key of the user.
+    element_t pk;     // The public key of the user.
+};
+typedef struct sv_user_struct *sv_user_ptr;
+typedef struct sv_user_struct sv_user_t[1];
+
 struct warrant_struct
 {
     sv_identity_t from; // Identity of the user that is delegating the signature.
@@ -52,22 +63,46 @@ typedef struct warrant_struct warrant_t[1];
 
 struct delegation_struct
 {
-    warrant_ptr m; // Warrant of the delegation.
-    element_t r;   // r value used to verify the delegation (in GT).
-    element_t S;   // S value used to verify the delegation (in G1).
+    warrant_t m; // Warrant of the delegation.
+    element_t r; // r value used to verify the delegation (in GT).
+    element_t S; // S value used to verify the delegation (in G1).
 };
 typedef struct delegation_struct *delegation_ptr;
 typedef struct delegation_struct delegation_t[1];
 
 struct proxy_signature_struct
 {
-    warrant_ptr m; // Warrant of the delegation.
-    element_t r;   // r value used to verify the signature (in GT).
-    element_t V;   // V value used to verify the signature (in Zr).
-    element_t U;   // U value used to verify the signature (in G1).
+    warrant_t m; // Warrant of the delegation.
+    element_t r; // r value used to verify the signature (in GT).
+    element_t V; // V value used to verify the signature (in Zr).
+    element_t U; // U value used to verify the signature (in G1).
 };
 typedef struct proxy_signature_struct *proxy_signature_ptr;
 typedef struct proxy_signature_struct proxy_signature_t[1];
+
+long read_binary_file(uint8_t **data, const char file_path[]);
+
+/**
+ * @brief Initialize the user struct.
+ * Make sure all elements are initialized.
+ * Both the secret and public keys are set to 0, so it is easy to check if they have been extracted.
+ *
+ * @param user User to be initialized.
+ * @param identity Identity of the user.
+ * @param public_p Public parameters of the scheme.
+ */
+void user_init(sv_user_t user, const sv_identity_t identity, sv_public_params_t public_p);
+
+/**
+ * @brief Initialize the user struct using a string as identity.
+ * Make sure all elements are initialized.
+ * Both the secret and public keys are set to 0, so it is easy to check if they have been extracted.
+ *
+ * @param user User to be initialized.
+ * @param identity Identity of the user represented as a string.
+ * @param public_p Public parameters of the scheme.
+ */
+void user_init_str(sv_user_t user, const char identity[], sv_public_params_t public_p);
 
 /**
  * @brief Initialize the warrant struct.
@@ -108,11 +143,13 @@ uint16_t deserialize_warrant(warrant_t m, const uint8_t buffer[WARRANT_SIZE]);
 
 int serialize_delegation(uint8_t **data, delegation_t w);
 void deserialize_delegation(delegation_t w, uint8_t data[]);
+void deserialize_delegation_from_file(delegation_t w, const char file_path[]);
 void delegation_printf(delegation_t w);
 void delegation_fprintf(FILE *stream, delegation_t w);
 
 int serialize_proxy_signature(uint8_t **data, proxy_signature_t p_sign);
 void deserialize_proxy_signature(proxy_signature_t p_sign, uint8_t data[]);
+void deserialize_proxy_signature_from_file(proxy_signature_t p_sig, const char file_path[]);
 void proxy_signature_printf(proxy_signature_t p_sign);
 void proxy_signature_fprintf(FILE *stream, proxy_signature_t p_sign);
 
@@ -120,7 +157,7 @@ void proxy_signature_fprintf(FILE *stream, proxy_signature_t p_sign);
  * @brief Clear the public param struct.
  * Makes sure all elements are cleared.
  *
- * @param public_p Parameters public publicly.
+ * @param public_p Public parameters of the scheme to be cleared.
  */
 void public_param_clear(sv_public_params_t public_p);
 
@@ -128,9 +165,17 @@ void public_param_clear(sv_public_params_t public_p);
  * @brief Clear the secret param struct.
  * Make sure all elements are cleared.
  *
- * @param secret_p Parameters known only by the original signer.
+ * @param secret_p Secret parameters of the scheme to be cleared.
  */
 void secret_param_clear(sv_secret_params_t secret_p);
+
+/**
+ * @brief Clear the user struct.
+ * Make sure all elements are cleared.
+ *
+ * @param user User to be cleared.
+ */
+void user_clear(sv_user_t user);
 
 /**
  * @brief Clear the warrant struct.

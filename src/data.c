@@ -1,5 +1,44 @@
 #include "data.h"
 
+long read_binary_file(uint8_t **data, const char file_path[])
+{
+    FILE *fp = fopen(file_path, "rb");
+    if (fp == NULL)
+    {
+        fprintf(stderr, "Error opening file %s\n", file_path);
+        exit(1);
+    }
+    fseek(fp, 0L, SEEK_END);
+    long len = ftell(fp);
+    rewind(fp);
+    *data = malloc(len);
+    if (fread(*data, len, 1, fp) != 1)
+    {
+        fprintf(stderr, "Error reading file %s", file_path);
+        exit(1);
+    }
+    fclose(fp);
+    return len;
+}
+
+void user_init(sv_user_t user, const sv_identity_t identity, sv_public_params_t public_p)
+{
+    if (identity)
+        memcpy(user->id, identity, IDENTITY_SIZE);
+    element_init_G1(user->pk, public_p->pairing);
+    element_init_G1(user->sk, public_p->pairing);
+    element_set0(user->pk);
+    element_set0(user->sk);
+}
+
+void user_init_str(sv_user_t user, const char identity[], sv_public_params_t public_p)
+{
+    sv_identity_t id;
+    memset(id, 0, IDENTITY_SIZE);
+    memcpy(id, identity, STR_IDENTITY_SIZE(identity));
+    user_init(user, id, public_p);
+}
+
 void delegation_init(delegation_t w, sv_public_params_t public_p)
 {
     element_init_GT(w->r, public_p->pairing);
@@ -51,6 +90,16 @@ void deserialize_delegation(delegation_t w, uint8_t data[])
     element_from_bytes_compressed(w->S, data + offset);
 }
 
+void deserialize_delegation_from_file(delegation_t w, const char file_path[])
+{
+    VERBOSE_PRINT("Deserialized delegation from file '%s'\n", file_path);
+    uint8_t *data = NULL;
+    int len = read_binary_file(&data, file_path);
+    deserialize_delegation(w, data);
+    VERBOSE_PRINT("Expected size: %ld\nFile size: %d\n", sizeof(w->m->from) + sizeof(w->m->to) + element_length_in_bytes(w->r) + element_length_in_bytes_compressed(w->S), len);
+    free(data);
+}
+
 void delegation_printf(delegation_t w)
 {
     delegation_fprintf(stdout, w);
@@ -82,17 +131,29 @@ int serialize_proxy_signature(uint8_t **data, proxy_signature_t p_sig)
     return len;
 }
 
-void deserialize_proxy_signature(proxy_signature_t p_sign, uint8_t data[])
+void deserialize_proxy_signature(proxy_signature_t p_sig, uint8_t data[])
 {
-    int r_len = element_length_in_bytes(p_sign->r);
-    int U_len = element_length_in_bytes_compressed(p_sign->U);
-    deserialize_warrant(p_sign->m, data);
-    int offset = sizeof(p_sign->m->from) + sizeof(p_sign->m->to);
-    element_from_bytes(p_sign->r, data + offset);
+    int r_len = element_length_in_bytes(p_sig->r);
+    int U_len = element_length_in_bytes_compressed(p_sig->U);
+    VERBOSE_PRINT("Deserializing proxy signature");
+    VERBOSE_PRINT("Expected size: %ld bytes", sizeof(p_sig->m->from) + sizeof(p_sig->m->to) + r_len + U_len + element_length_in_bytes(p_sig->V));
+    deserialize_warrant(p_sig->m, data);
+    int offset = sizeof(p_sig->m->from) + sizeof(p_sig->m->to);
+    element_from_bytes(p_sig->r, data + offset);
     offset += r_len;
-    element_from_bytes_compressed(p_sign->U, data + offset);
+    element_from_bytes_compressed(p_sig->U, data + offset);
     offset += U_len;
-    element_from_bytes(p_sign->V, data + offset);
+    element_from_bytes(p_sig->V, data + offset);
+}
+
+void deserialize_proxy_signature_from_file(proxy_signature_t p_sig, const char file_path[])
+{
+    VERBOSE_PRINT("Reading proxy signature from file %s\n", file_path);
+    uint8_t *data = NULL;
+    int len = read_binary_file(&data, file_path);
+    deserialize_proxy_signature(p_sig, data);
+    VERBOSE_PRINT("Expected size: %ld\nFile size: %d bytes\n", sizeof(p_sig->m->from) + sizeof(p_sig->m->to) + element_length_in_bytes(p_sig->r) + element_length_in_bytes_compressed(p_sig->U) + element_length_in_bytes(p_sig->V), len);
+    free(data);
 }
 
 void proxy_signature_printf(proxy_signature_t p_sign)
@@ -119,6 +180,12 @@ void public_param_clear(sv_public_params_t public_p)
 void secret_param_clear(sv_secret_params_t secret_p)
 {
     element_clear(secret_p->msk);
+}
+
+void user_clear(sv_user_t user_k)
+{
+    element_clear(user_k->sk);
+    element_clear(user_k->pk);
 }
 
 void delegation_clear(delegation_t w)

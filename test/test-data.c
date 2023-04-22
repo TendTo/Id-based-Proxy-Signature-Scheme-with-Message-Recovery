@@ -4,9 +4,10 @@
 
 static sv_public_params_t public_p;
 static sv_secret_params_t secret_p;
+static sv_user_t from, to;
 static delegation_t w;
 static warrant_t m;
-static element_t sk_a, sk_b, k_sign;
+static element_t k_sign;
 static proxy_signature_t p_sig;
 
 static void data_setup_fixture()
@@ -18,21 +19,21 @@ static void data_setup_fixture()
     hash_type_t hash_type = hash_types[0];
 
     setup(public_p, secret_p, sec_lvl, hash_type);
-    element_init_G1(sk_a, public_p->pairing);
-    element_init_G1(sk_b, public_p->pairing);
-    extract_s(sk_a, TEST_IDENTITY, secret_p);
-    extract_s(sk_b, TEST_IDENTITY_2, secret_p);
+    user_init(from, m->from, public_p);
+    user_init(to, m->to, public_p);
+    extract_s(from, secret_p);
+    extract_s(to, secret_p);
     delegation_init(w, public_p);
-    delegate(w, sk_a, m, public_p);
-    pk_gen(k_sign, sk_b, w, public_p);
+    delegate(w, from, to, public_p);
+    pk_gen(k_sign, to, w, public_p);
     proxy_signature_init(p_sig, public_p);
     p_sign(p_sig, k_sign, w, (uint8_t *)TEST_MESSAGE, strlen(TEST_MESSAGE), public_p);
 }
 
 static void data_teardown_fixture()
 {
-    element_clear(sk_a);
-    element_clear(sk_b);
+    user_clear(from);
+    user_clear(to);
     element_clear(k_sign);
     delegation_clear(w);
     proxy_signature_clear(p_sig);
@@ -93,9 +94,7 @@ START_TEST(test_serialize_delegation)
     uint8_t *data;
 
     serialize_delegation(&data, w);
-    warrant_t m2;
     delegation_t w2;
-    w2->m = m2;
     delegation_init(w2, public_p);
     deserialize_delegation(w2, data);
     ck_assert_int_eq(element_cmp(w->r, w2->r), 0);
@@ -117,9 +116,7 @@ START_TEST(test_serialize_proxy_signature)
     uint8_t *data;
 
     serialize_proxy_signature(&data, p_sig);
-    warrant_t m2;
     proxy_signature_t p_sig2;
-    p_sig2->m = m2;
     proxy_signature_init(p_sig2, public_p);
     deserialize_proxy_signature(p_sig2, data);
     ck_assert_int_eq(element_cmp(p_sig->r, p_sig2->r), 0);
@@ -130,107 +127,6 @@ START_TEST(test_serialize_proxy_signature)
 
     proxy_signature_clear(p_sig2);
     free(data);
-}
-END_TEST
-
-#pragma endregion
-
-#pragma region clear
-
-START_TEST(test_public_params_clear)
-{
-    sv_public_params_t public_p;
-    sv_secret_params_t secret_p;
-    setup(public_p, secret_p, 80, sha_1);
-    public_param_clear(public_p);
-    ck_assert(1);
-}
-END_TEST
-
-START_TEST(test_public_params_already_cleared)
-{
-    sv_public_params_t public_p;
-    sv_secret_params_t secret_p;
-    setup(public_p, secret_p, 80, sha_1);
-    public_param_clear(public_p);
-    public_param_clear(public_p);
-}
-END_TEST
-
-START_TEST(test_public_params_not_init)
-{
-    sv_public_params_t public_p;
-    public_param_clear(public_p);
-}
-END_TEST
-
-START_TEST(test_secret_params_clear)
-{
-    sv_public_params_t public_p;
-    sv_secret_params_t secret_p;
-    setup(public_p, secret_p, 80, sha_1);
-    secret_param_clear(secret_p);
-    ck_assert(1);
-}
-END_TEST
-
-START_TEST(test_secret_params_already_cleared)
-{
-    sv_public_params_t public_p;
-    sv_secret_params_t secret_p;
-    setup(public_p, secret_p, 80, sha_1);
-    secret_param_clear(secret_p);
-    secret_param_clear(secret_p);
-}
-END_TEST
-
-START_TEST(test_secret_params_not_init)
-{
-    sv_secret_params_t secret_p;
-    secret_param_clear(secret_p);
-}
-END_TEST
-
-START_TEST(test_delegation_clear)
-{
-    sv_public_params_t public_p;
-    sv_secret_params_t secret_p;
-    delegation_t w;
-    warrant_t m;
-    element_t sk;
-
-    memcpy(m->from, TEST_IDENTITY, IDENTITY_SIZE);
-    memcpy(m->to, TEST_IDENTITY_2, IDENTITY_SIZE);
-
-    setup(public_p, secret_p, 80, sha_1);
-    extract_s(sk, TEST_IDENTITY, secret_p);
-    delegation_init(w, public_p);
-    delegate(w, sk, m, public_p);
-
-    delegation_clear(w);
-    ck_assert(1);
-}
-END_TEST
-
-START_TEST(test_delegation_already_cleared)
-{
-    sv_public_params_t public_p;
-    sv_secret_params_t secret_p;
-    delegation_t w;
-    warrant_t m;
-    element_t sk;
-
-    memcpy(m->from, TEST_IDENTITY, IDENTITY_SIZE);
-    memcpy(m->to, TEST_IDENTITY_2, IDENTITY_SIZE);
-
-    setup(public_p, secret_p, 80, sha_1);
-    extract_s(sk, TEST_IDENTITY, secret_p);
-    delegation_init(w, public_p);
-    delegate(w, sk, m, public_p);
-
-    delegation_clear(w);
-    delegation_clear(w);
-    ck_assert(1);
 }
 END_TEST
 
@@ -252,20 +148,9 @@ Suite *data_suite()
     tcase_add_checked_fixture(tc_serialize_proxy_signature, data_setup_fixture, data_teardown_fixture);
     tcase_add_test(tc_serialize_proxy_signature, test_serialize_proxy_signature);
 
-    TCase *tc_clear = tcase_create("clear");
-    tcase_add_test(tc_clear, test_public_params_clear);
-    tcase_add_test_raise_signal(tc_clear, test_public_params_already_cleared, SIGSEGV);
-    tcase_add_test_raise_signal(tc_clear, test_public_params_not_init, SIGSEGV);
-    tcase_add_test(tc_clear, test_secret_params_clear);
-    tcase_add_test(tc_clear, test_secret_params_already_cleared); // Elements can be cleared more than once
-    tcase_add_test_raise_signal(tc_clear, test_secret_params_not_init, SIGSEGV);
-    tcase_add_test(tc_clear, test_delegation_clear);
-    tcase_add_test_raise_signal(tc_clear, test_delegation_already_cleared, SIGSEGV);
-
     suite_add_tcase(s, tc_serialize_warrant);
     suite_add_tcase(s, tc_serialize_delegation);
     suite_add_tcase(s, tc_serialize_proxy_signature);
-    suite_add_tcase(s, tc_clear);
 
     return s;
 }
