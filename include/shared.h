@@ -136,9 +136,10 @@ void extract_s(sv_user_t user, sv_secret_params_t secret_p);
  * The resulting delegation is W = (m, r, S).
  *
  * @param w delegation to be created.
- * @param from user creating a delegation.
+ * @param from user creating a delegation. The sk must be initialized.
  * @param to user receiving the delegation.
  * @param public_p All the public parameters of the scheme.
+ * @warning The secret key of the user creating the delegation must be initialized.
  */
 void delegate(delegation_t w, sv_user_t from, sv_user_t to, sv_public_params_t public_p);
 
@@ -165,9 +166,10 @@ int del_verify(delegation_t w, sv_public_params_t public_p);
  * - psk = h * d + S
  *
  * @param k_sign proxy signing key to be created.
- * @param sk secret key of the user who is accepting the delegation.
+ * @param user delegated user who wants to sign a message. The sk must be initialized.
  * @param w delegation that validates the proxy signing key.
  * @param public_p All the public parameters of the scheme.
+ * @warning The delegated user must have the secret key initialized.
  */
 void pk_gen(element_t k_sign, sv_user_t user, delegation_t w, sv_public_params_t public_p);
 

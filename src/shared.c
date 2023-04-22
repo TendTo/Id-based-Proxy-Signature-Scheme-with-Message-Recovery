@@ -174,7 +174,7 @@ void setup_from_str(sv_public_params_t public_p, sv_secret_params_t secret_p, ch
     }
 
     // public params setup
-    public_p->q = pairing_length_in_bytes_x_only_G1(public_p->pairing);
+    public_p->q = pairing_length_in_bytes_Zr(public_p->pairing);
     public_p->l1 = public_p->q / 2;
     public_p->l2 = public_p->q - public_p->l1;
     public_p->hash_type = hash_type;
