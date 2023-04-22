@@ -12,6 +12,8 @@ static void bench_imp_p_sign(bench_param_t bench_p)
     proxy_signature_t p_sig;
 
     setup(public_p, secret_p, bench_p->sec_lvl, bench_p->hash_type);
+    if (bench_p->precompute)
+        public_params_pp(public_p);
     user_init(user, BENCH_IDENTITY, public_p);
     extract_s(user, secret_p);
     delegation_init(w, public_p);
@@ -46,6 +48,8 @@ static void bench_imp_sign_verify(bench_param_t bench_p)
     proxy_signature_t p_sig;
 
     setup(public_p, secret_p, bench_p->sec_lvl, bench_p->hash_type);
+    if (bench_p->precompute)
+        public_params_pp(public_p);
     user_init(user, BENCH_IDENTITY, public_p);
     extract_s(user, secret_p);
     delegation_init(w, public_p);

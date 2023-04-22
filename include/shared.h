@@ -107,6 +107,13 @@ void setup_from_params(sv_public_params_t public_p, sv_secret_params_t secret_p,
 void setup_from_str(sv_public_params_t public_p, sv_secret_params_t secret_p, char pairing_p_str[]);
 
 /**
+ * @brief Apply all possible precomputations on the public parameters.
+ * 
+ * @param public_p All the public parameters of the scheme.
+ */
+void public_params_pp(sv_public_params_t public_p);
+
+/**
  * @brief Produces the public key pk_id from an identity.
  * It uses the hash function H0 to map the any string {0, 1}*, representing the identity,
  * to an element of G1: pk_id = H0(identity).

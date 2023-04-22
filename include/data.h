@@ -31,7 +31,12 @@ struct sv_public_params_struct
     int l2;                // Half of number bits of an element in G1.
     int q;                 // Order of the group.
     hash_type_t hash_type; // Hash algorithm used by the scheme.
-    short precomputed;     // Flag to indicate if the precomputation has been done.
+    short precompute;      // Flag to indicate if the precomputation has been done.
+    pairing_pp_t eP_pp;    // Precomputed value of P to speed up pairings e(P,.).
+    pairing_pp_t epk_pp;   // Precomputed value of pk to speed up pairings e(pk,.).
+    element_pp_t PP_pp;    // Precomputed value of e(P,P) to speed up powers e(P, P)^..
+    element_pp_t P_pp;     // Precomputed value of P to speed up multiplications .P.
+    element_pp_t pk_pp;    // Precomputed value of pk to speed up multiplications .pk.
 };
 typedef struct sv_public_params_struct *sv_public_params_ptr;
 typedef struct sv_public_params_struct sv_public_params_t[1];
@@ -46,9 +51,10 @@ typedef struct sv_secret_params_struct sv_secret_params_t[1];
 
 struct sv_user_struct
 {
-    sv_identity_t id; // Identity of the user.
-    element_t sk;     // The secret key of the user.
-    element_t pk;     // The public key of the user.
+    sv_identity_t id;   // Identity of the user.
+    element_t sk;       // The secret key of the user.
+    element_t pk;       // The public key of the user.
+    element_pp_t sk_pp; // Precomputed value of sk to speed up multiplications .sk.
 };
 typedef struct sv_user_struct *sv_user_ptr;
 typedef struct sv_user_struct sv_user_t[1];

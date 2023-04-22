@@ -16,8 +16,15 @@ void imp_p_sign(proxy_signature_t p_sig, element_t k_sign, delegation_t w, const
     element_random(k);
 
     // r_b = e(P, P)^k
-    element_pairing(r_b, public_p->P, public_p->P);
-    element_pow_zn(r_b, r_b, k);
+    if (public_p->precompute)
+    {
+        element_pp_pow_zn(r_b, k, public_p->PP_pp);
+    }
+    else
+    {
+        element_pairing(r_b, public_p->P, public_p->P);
+        element_pow_zn(r_b, r_b, k);
+    }
 
     // beta = F1(msg) || F2(F1(msg)) (+) msg)
     uint8_t beta[public_p->q];
@@ -33,7 +40,10 @@ void imp_p_sign(proxy_signature_t p_sig, element_t k_sign, delegation_t w, const
     element_add(p_sig->V, p_sig->V, alpha);
 
     // U = k * P + V * k_sign
-    element_mul_zn(p_sig->U, public_p->P, k);
+    if (public_p->precompute)
+        element_pp_pow_zn(p_sig->U, k, public_p->P_pp);
+    else
+        element_mul_zn(p_sig->U, public_p->P, k);
     element_mul_zn(temp, k_sign, p_sig->V);
     element_add(p_sig->U, p_sig->U, temp);
 
@@ -63,10 +73,16 @@ uint16_t imp_sign_verify(uint8_t msg[], proxy_signature_t p_sig, sv_public_param
 
     // alpha = V - H(e(U, P) * e(qa + qb, Pub)^-Vh * r^-V)
     // p_1 = e(U, P)
-    element_pairing(p_1, p_sig->U, public_p->P);
+    if (public_p->precompute)
+        pairing_pp_apply(p_1, p_sig->U, public_p->eP_pp);
+    else
+        element_pairing(p_1, p_sig->U, public_p->P);
     // p_2 = e(pk_a + pk_b, Pub)^-Vh
     element_add(p_sum, from->pk, to->pk);
-    element_pairing(p_2, p_sum, public_p->pk);
+    if (public_p->precompute)
+        pairing_pp_apply(p_2, p_sum, public_p->epk_pp);
+    else
+        element_pairing(p_2, p_sum, public_p->pk);
     element_neg(V, p_sig->V);
     element_mul(h, V, h);
     element_pow_zn(p_2, p_2, h);

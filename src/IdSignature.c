@@ -1,6 +1,7 @@
 #include "IdSignature.h"
 
 static FILE *out_stream = NULL;
+static short p_flag = 0;
 
 static void main_setup(int sec_lvl, hash_type_t hash_type)
 {
@@ -29,6 +30,8 @@ static void main_keygen(char pairing_p_str[], char *ids[], int ids_len)
     sv_secret_params_t secret_p;
 
     setup_from_str(public_p, secret_p, pairing_p_str);
+    if (p_flag)
+        public_params_pp(public_p);
     user_init(user, NULL, public_p);
     VERBOSE_PRINT("Elements initialized!\n");
 
@@ -57,6 +60,8 @@ static void main_delegate(char pairing_p_str[], const char sk_str[], const char 
     delegation_t w;
 
     setup_from_str(public_p, secret_p, pairing_p_str);
+    if (p_flag)
+        public_params_pp(public_p);
     user_init_str(from, from_id, public_p);
     user_init_str(to, to_id, public_p);
     element_set_str(from->sk, sk_str, 10);
@@ -80,7 +85,10 @@ static void main_del_verify(char pairing_p_str[], const char delegation_file_pat
     sv_public_params_t public_p;
     sv_secret_params_t secret_p;
     delegation_t w;
+
     setup_from_str(public_p, secret_p, pairing_p_str);
+    if (p_flag)
+        public_params_pp(public_p);
     delegation_init(w, public_p);
     deserialize_delegation_from_file(w, delegation_file_path);
 
@@ -104,8 +112,12 @@ static void main_pk_gen(char pairing_p_str[], const char sk_str[], const char de
     element_t k_sign;
 
     setup_from_str(public_p, secret_p, pairing_p_str);
+    if (p_flag)
+        public_params_pp(public_p);
     user_init(user, NULL, public_p);
     element_set_str(user->sk, sk_str, 10);
+    if (p_flag)
+        element_pp_init(user->sk_pp, user->sk);
     delegation_init(w, public_p);
     deserialize_delegation_from_file(w, delegation_file_path);
 
@@ -137,6 +149,8 @@ static void main_p_sign(char pairing_p_str[], const char delegation_file_path[],
     proxy_signature_t p_sig;
 
     setup_from_str(public_p, secret_p, pairing_p_str);
+    if (p_flag)
+        public_params_pp(public_p);
     delegation_init(w, public_p);
     deserialize_delegation_from_file(w, delegation_file_path);
     element_init_G1(k_sign, public_p->pairing);
@@ -169,6 +183,8 @@ static void main_sign_verify(char pairing_p_str[], const char delegation_file_pa
     proxy_signature_t p_sig;
 
     setup_from_str(public_p, secret_p, pairing_p_str);
+    if (p_flag)
+        public_params_pp(public_p);
     delegation_init(w, public_p);
     deserialize_delegation_from_file(w, delegation_file_path);
     proxy_signature_init(p_sig, public_p);
@@ -202,7 +218,7 @@ int main(int argc, char *argv[])
     hash_type_t hash_type = DEFAULT_HASH_TYPE;
 
     // Handle inputs
-    while ((opt = getopt(argc, argv, ":hvil:a:s:f:t:o:")) != -1)
+    while ((opt = getopt(argc, argv, ":hvipl:a:s:f:t:o:")) != -1)
     {
         switch (opt)
         {
@@ -215,6 +231,9 @@ int main(int argc, char *argv[])
             break;
         case 'i':
             imp_flag = 1;
+            break;
+        case 'p':
+            p_flag = 1;
             break;
         case 'l':
             sec_lvl = atoi(optarg);

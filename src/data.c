@@ -174,6 +174,14 @@ void public_param_clear(sv_public_params_t public_p)
 {
     element_clear(public_p->P);
     element_clear(public_p->pk);
+    if (public_p->precompute)
+    {
+        pairing_pp_clear(public_p->eP_pp);
+        pairing_pp_clear(public_p->epk_pp);
+        element_pp_clear(public_p->PP_pp);
+        element_pp_clear(public_p->P_pp);
+        element_pp_clear(public_p->pk_pp);
+    }
     pairing_clear(public_p->pairing);
 }
 
@@ -186,6 +194,7 @@ void user_clear(sv_user_t user_k)
 {
     element_clear(user_k->sk);
     element_clear(user_k->pk);
+    // TODO: precompute clear?
 }
 
 void delegation_clear(delegation_t w)

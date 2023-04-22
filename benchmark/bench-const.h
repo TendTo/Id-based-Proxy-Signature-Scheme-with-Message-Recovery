@@ -20,6 +20,7 @@ Usage: %s \n\
 Options:\n\
 \t-h   -  shows the help tooltip\n\
 \t-v   -  use verbose output\n\
+\t-p   -  use precomputation where possible\n\
 \t-a   -  hash algorithm [sha1, sha256, sha512] (sha1)\n\
 \t-l   -  security level (80)\n\
 \t-t   -  maximum sampling time in seconds (4)\n\
@@ -34,6 +35,7 @@ struct bench_param_struct
     long max_sampling_time;
     int sec_lvl;
     hash_type_t hash_type;
+    short precompute;
 };
 typedef struct bench_param_struct *bench_param_ptr;
 typedef struct bench_param_struct bench_param_t[1];

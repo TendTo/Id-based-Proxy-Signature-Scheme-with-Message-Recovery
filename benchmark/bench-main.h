@@ -12,6 +12,7 @@
 #define DEFAULT_MAX_SAMPLING_TIME 4
 #define DEFAULT_MAX_SAMPLES (DEFAULT_MAX_SAMPLING_TIME * 1000)
 #define DEFAULT_HASH_TYPE sha_1
+#define DEFAULT_PRECOMPUTE 0
 
 void printf_params(bench_param_t bench_p);
 int main(int argc, char *argv[]);

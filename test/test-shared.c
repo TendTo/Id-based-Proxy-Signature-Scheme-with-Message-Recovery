@@ -68,6 +68,7 @@ START_TEST(test_setup)
     sv_secret_params_t secret_p;
     setup(public_p, secret_p, sec_lvl, sha_1);
 
+    ck_assert_int_eq(public_p->precompute, 0);
     ck_assert(pairing_is_symmetric(public_p->pairing));
     ck_assert_int_eq(pairing_length_in_bytes_Zr(public_p->pairing) * 8, sec_lvl * 2);
 }
@@ -128,6 +129,21 @@ START_TEST(test_setup_str)
     ck_assert_int_eq(public_p->l1, TEST_L1);
     ck_assert_int_eq(public_p->l2, TEST_L2);
     ck_assert_int_eq(public_p->hash_type, TEST_HASH_TYPE);
+}
+END_TEST
+
+START_TEST(test_setup_pp)
+{
+    const int sec_lvl = sec_levels[_i];
+    sv_public_params_t public_p;
+    sv_secret_params_t secret_p;
+    setup(public_p, secret_p, sec_lvl, sha_1);
+    public_params_pp(public_p);
+
+    ck_assert_int_eq(public_p->precompute, 1);
+    ck_assert(public_p->eP_pp != NULL);
+    ck_assert(public_p->epk_pp != NULL);
+    ck_assert(public_p->PP_pp != NULL);
 }
 END_TEST
 
@@ -216,6 +232,28 @@ START_TEST(test_delegate)
 }
 END_TEST
 
+START_TEST(test_delegate_pp)
+{
+    sv_public_params_t public_p;
+    sv_secret_params_t secret_p;
+    sv_user_t from, to;
+    delegation_t w;
+
+    setup(public_p, secret_p, 80, sha_1);
+    public_params_pp(public_p);
+    user_init(from, TEST_IDENTITY, public_p);
+    user_init(to, TEST_IDENTITY_2, public_p);
+    extract_s(from, secret_p);
+    delegation_init(w, public_p);
+    delegate(w, from, to, public_p);
+
+    ck_assert_mem_eq(w->m->from, from->id, IDENTITY_SIZE);
+    ck_assert_mem_eq(w->m->to, to->id, IDENTITY_SIZE);
+    ck_assert(!element_is0(w->r));
+    ck_assert(!element_is0(w->S));
+}
+END_TEST
+
 #pragma endregion
 
 #pragma region del_verify
@@ -228,6 +266,25 @@ START_TEST(test_del_verify)
     delegation_t w;
 
     setup(public_p, secret_p, 80, sha_1);
+    user_init(from, TEST_IDENTITY, public_p);
+    user_init(to, TEST_IDENTITY_2, public_p);
+    extract_s(from, secret_p);
+    delegation_init(w, public_p);
+    delegate(w, from, to, public_p);
+
+    ck_assert(del_verify(w, public_p));
+}
+END_TEST
+
+START_TEST(test_del_verify_pp)
+{
+    sv_public_params_t public_p;
+    sv_secret_params_t secret_p;
+    sv_user_t from, to;
+    delegation_t w;
+
+    setup(public_p, secret_p, 80, sha_1);
+    public_params_pp(public_p);
     user_init(from, TEST_IDENTITY, public_p);
     user_init(to, TEST_IDENTITY_2, public_p);
     extract_s(from, secret_p);
@@ -312,6 +369,32 @@ START_TEST(test_pk_sign)
     user_init(from, TEST_IDENTITY, public_p);
     user_init(to, TEST_IDENTITY_2, public_p);
     extract_s(from, secret_p);
+    extract_s(to, secret_p);
+    delegation_init(w, public_p);
+    delegate(w, from, to, public_p);
+
+    element_init_G1(k_sign, public_p->pairing);
+    element_set0(k_sign);
+    pk_gen(k_sign, to, w, public_p);
+
+    ck_assert(!element_is0(k_sign));
+}
+END_TEST
+
+START_TEST(test_pk_sign_pp)
+{
+    sv_public_params_t public_p;
+    sv_secret_params_t secret_p;
+    sv_user_t from, to;
+    delegation_t w;
+    element_t k_sign;
+
+    setup(public_p, secret_p, 80, sha_1);
+    public_params_pp(public_p);
+    user_init(from, TEST_IDENTITY, public_p);
+    user_init(to, TEST_IDENTITY_2, public_p);
+    extract_s(from, secret_p);
+    extract_s(to, secret_p);
     delegation_init(w, public_p);
     delegate(w, from, to, public_p);
 
@@ -343,6 +426,7 @@ Suite *utility_suite()
     tcase_add_loop_test(tc_setup, test_setup_hash, 0, N_HASH_TYPES);
     tcase_add_loop_test(tc_setup, test_setup_pk, 0, N_SEC_LEVELS);
     tcase_add_loop_test(tc_setup, test_setup_order, 0, N_SEC_LEVELS);
+    tcase_add_loop_test(tc_setup, test_setup_pp, 0, N_SEC_LEVELS);
     tcase_add_test(tc_setup, test_setup_str);
 
     TCase *tc_extract = tcase_create("extract");
@@ -352,15 +436,18 @@ Suite *utility_suite()
 
     TCase *tc_delegate = tcase_create("delegate");
     tcase_add_test(tc_delegate, test_delegate);
+    tcase_add_test(tc_delegate, test_delegate_pp);
 
     TCase *tc_del_verify = tcase_create("del_verify");
     tcase_add_test(tc_del_verify, test_del_verify);
+    tcase_add_test(tc_del_verify, test_del_verify_pp);
     tcase_add_test(tc_del_verify, test_del_verify_str);
     tcase_add_test(tc_del_verify, test_del_verify_fail_from);
     tcase_add_test(tc_del_verify, test_del_verify_fail_to);
 
     TCase *tc_pk_sign = tcase_create("pk_sign");
     tcase_add_test(tc_pk_sign, test_pk_sign);
+    tcase_add_test(tc_pk_sign, test_pk_sign_pp);
 
     suite_add_tcase(s, tc_hash);
     suite_add_tcase(s, tc_hash_element);

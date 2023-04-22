@@ -19,10 +19,11 @@ int main(int argc, char *argv[])
     bench_p->max_sampling_time = DEFAULT_MAX_SAMPLING_TIME;
     bench_p->sec_lvl = DEFAULT_SEC_LVL;
     bench_p->hash_type = DEFAULT_HASH_TYPE;
+    bench_p->precompute = DEFAULT_PRECOMPUTE;
     unsigned int seed = 0;
 
     int opt;
-    while ((opt = getopt(argc, argv, ":hl:a:t:i:s:")) != -1)
+    while ((opt = getopt(argc, argv, ":hpl:a:t:i:s:")) != -1)
     {
         switch (opt)
         {
@@ -38,6 +39,9 @@ int main(int argc, char *argv[])
             break;
         case 'i':
             bench_p->max_samples = atol(optarg);
+            break;
+        case 'p':
+            bench_p->precompute = 1;
             break;
         case 'a':
             if (strcmp(optarg, "sha1") == 0)
@@ -93,6 +97,7 @@ void printf_params(bench_param_t bench_p)
     printf("\tMax samples: %ld\n", bench_p->max_samples);
     printf("\tMax sampling time: %ld\n", bench_p->max_sampling_time);
     printf("\tSecurity level: %d\n", bench_p->sec_lvl);
+    printf("\tPrecompute enabled: %s\n", bench_p->precompute ? "yes" : "no");
     printf("\tHash type: %s\n", bench_p->hash_type == sha_1 ? "sha1" : bench_p->hash_type == sha_256 ? "sha256"
                                                                                                      : "sha512");
     printf(SEPARATOR);

@@ -109,6 +109,9 @@ void setup_from_params(sv_public_params_t public_p, sv_secret_params_t secret_p,
 {
     pairing_init_pbc_param(public_p->pairing, pairing_p);
 
+    // disable precomputation
+    public_p->precompute = 0;
+
     // secret params init
     element_init_Zr(secret_p->msk, public_p->pairing);
 
@@ -174,12 +177,32 @@ void setup_from_str(sv_public_params_t public_p, sv_secret_params_t secret_p, ch
     }
 
     // public params setup
+    public_p->precompute = 0;
     public_p->q = pairing_length_in_bytes_Zr(public_p->pairing);
     public_p->l1 = public_p->q / 2;
     public_p->l2 = public_p->q - public_p->l1;
     public_p->hash_type = hash_type;
 
     pbc_param_clear(pairing_p);
+}
+
+void public_params_pp(sv_public_params_t public_p)
+{
+    public_p->precompute = 1;
+
+    element_t epp;
+    element_init_GT(epp, public_p->pairing);
+
+    pairing_pp_init(public_p->eP_pp, public_p->P, public_p->pairing);
+    pairing_pp_init(public_p->epk_pp, public_p->pk, public_p->pairing);
+
+    pairing_pp_apply(epp, public_p->P, public_p->eP_pp);
+
+    element_pp_init(public_p->PP_pp, epp);
+    element_pp_init(public_p->P_pp, public_p->P);
+    element_pp_init(public_p->pk_pp, public_p->pk);
+
+    element_clear(epp);
 }
 
 void extract_p(sv_user_t user, sv_public_params_t public_p)
@@ -201,6 +224,12 @@ void extract_s(sv_user_t user, sv_secret_params_t secret_p)
     // Generating sk for the user
     element_from_hash(user->sk, digest, digest_len);
     element_mul_zn(user->sk, user->sk, secret_p->msk);
+
+    // Precomputing sk if selected
+    if (secret_p->public_params->precompute)
+    {
+        element_pp_init(user->sk_pp, user->sk);
+    }
 }
 
 void delegate(delegation_t w, sv_user_t from, sv_user_t to, sv_public_params_t public_p)
@@ -217,15 +246,30 @@ void delegate(delegation_t w, sv_user_t from, sv_user_t to, sv_public_params_t p
     element_random(k);
 
     // r = e(P, P)^k (in GT)
-    element_pairing(w->r, public_p->P, public_p->P);
-    element_pow_zn(w->r, w->r, k);
+    if (public_p->precompute)
+    {
+        element_pp_pow_zn(w->r, k, public_p->PP_pp);
+    }
+    else
+    {
+        element_pairing(w->r, public_p->P, public_p->P);
+        element_pow_zn(w->r, w->r, k);
+    }
 
     // h = H(m, ra) (in Zr)
     hash_warrant_and_r(h, w->r, w->m, public_p->hash_type);
 
     // S = h * sk + k * P (in G1)
-    element_mul_zn(w->S, from->sk, h);
-    element_mul_zn(temp, public_p->P, k);
+    if (public_p->precompute)
+    {
+        element_pp_pow_zn(w->S, h, from->sk_pp);
+        element_pp_pow_zn(temp, k, public_p->P_pp);
+    }
+    else
+    {
+        element_mul_zn(w->S, from->sk, h);
+        element_mul_zn(temp, public_p->P, k);
+    }
     element_add(w->S, w->S, temp);
 
     element_clear(k);
@@ -248,9 +292,16 @@ int del_verify(delegation_t w, sv_public_params_t public_p)
     hash_warrant_and_r(h, w->r, w->m, public_p->hash_type);
 
     // e(S, P) = e(Pub, pk)^h * r
-    element_pairing(left_el, w->S, public_p->P);
-
-    element_pairing(right_el, user->pk, public_p->pk);
+    if (public_p->precompute)
+    {
+        pairing_pp_apply(left_el, w->S, public_p->eP_pp);
+        pairing_pp_apply(right_el, user->pk, public_p->epk_pp);
+    }
+    else
+    {
+        element_pairing(left_el, w->S, public_p->P);
+        element_pairing(right_el, user->pk, public_p->pk);
+    }
     element_pow_zn(right_el, right_el, h);
     element_mul(right_el, right_el, w->r);
 
@@ -274,7 +325,10 @@ void pk_gen(element_t k_sign, sv_user_t user, delegation_t w, sv_public_params_t
     hash_warrant_and_r(h, w->r, w->m, public_p->hash_type);
 
     // k_sig = h * sk + S
-    element_mul_zn(k_sign, user->sk, h);
+    if (public_p->precompute)
+        element_pp_pow_zn(k_sign, h, user->sk_pp);
+    else
+        element_mul_zn(k_sign, user->sk, h);
     element_add(k_sign, k_sign, w->S);
 
     element_clear(h);

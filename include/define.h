@@ -43,6 +43,7 @@ Operations:\n\
 Options:\n\
 \t-h  -  shows the help tooltip\n\
 \t-v  -  use verbose output\n\
+\t-p  -  use precomputation where possible\n\
 \t-i  -  use the improved version of the scheme\n\
 \t-a  -  hash algorithm [sha1, sha256, sha512] (sha1)\n\
 \t-l  -  security level (80)\n\
