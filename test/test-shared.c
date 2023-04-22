@@ -124,6 +124,9 @@ START_TEST(test_setup_str)
     ck_assert_int_eq(strcmp(buffer, TEST_PK), 0);
     element_snprintf(buffer, MAX_PARAM_LINE_SIZE, "%B", secret_p->msk);
     ck_assert_int_eq(strcmp(buffer, TEST_MSK), 0);
+    ck_assert_int_eq(public_p->q, TEST_Q);
+    ck_assert_int_eq(public_p->l1, TEST_L1);
+    ck_assert_int_eq(public_p->l2, TEST_L2);
     ck_assert_int_eq(public_p->hash_type, TEST_HASH_TYPE);
 }
 END_TEST
@@ -324,7 +327,7 @@ END_TEST
 
 Suite *utility_suite()
 {
-    Suite *s = suite_create("utility");
+    Suite *s = suite_create("shared");
 
     TCase *tc_hash = tcase_create("hash");
     tcase_add_loop_test(tc_hash, test_hash, 0, N_HASH_TYPES);
