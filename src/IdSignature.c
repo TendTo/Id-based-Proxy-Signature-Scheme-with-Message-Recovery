@@ -65,6 +65,8 @@ static void main_delegate(char pairing_p_str[], const char sk_str[], const char 
     user_init_str(from, from_id, public_p);
     user_init_str(to, to_id, public_p);
     element_set_str(from->sk, sk_str, 10);
+    if (p_flag)
+        element_pp_init(from->sk_pp, from->sk);
     delegation_init(w, public_p);
 
     VERBOSE_PRINT("Elements initialized!\n");
@@ -125,10 +127,6 @@ static void main_pk_gen(char pairing_p_str[], const char sk_str[], const char de
 
     pk_gen(k_sign, user, w, public_p);
 
-    // int len = element_length_in_bytes_compressed(p_sig);
-    // uint8_t p_sig_buf[len];
-    // element_to_bytes_compressed(p_sig_buf, p_sig);
-    // fwrite(p_sig_buf, sizeof(uint8_t), len, out_stream);
     element_fprintf(out_stream, "%B", k_sign);
 
     user_clear(user);

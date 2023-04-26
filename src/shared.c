@@ -227,9 +227,7 @@ void extract_s(sv_user_t user, sv_secret_params_t secret_p)
 
     // Precomputing sk if selected
     if (secret_p->public_params->precompute)
-    {
         element_pp_init(user->sk_pp, user->sk);
-    }
 }
 
 void delegate(delegation_t w, sv_user_t from, sv_user_t to, sv_public_params_t public_p)
