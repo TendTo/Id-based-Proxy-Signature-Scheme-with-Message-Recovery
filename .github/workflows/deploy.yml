@@ -61,6 +61,9 @@ jobs:
     steps:
       - name: Setup Pages
         uses: actions/configure-pages@v2
+
+      - name: Git checkout
+        uses: actions/checkout@v2
      
       - name: Run doxygen
         uses: mattnotmitt/doxygen-action@v1.9.5

@@ -1,5 +1,7 @@
 # Id based Proxy Signature Scheme with Message Recovery
 
+[![Deploy CI](https://github.com/TendTo/Id-based-Proxy-Signature-Scheme-with-Message-Recovery/actions/workflows/deploy.yml/badge.svg)](https://github.com/TendTo/Id-based-Proxy-Signature-Scheme-with-Message-Recovery/actions/workflows/deploy.yml)
+
 This is a prototype implementation of the Id based Proxy Signature Scheme with Message Recovery as described in the [paper](https://www.researchgate.net/publication/283648628_An_Improved_ID-based_Proxy_Signature_Scheme_with_Message_Recovery).  
 The implementation is written in [c](<https://en.wikipedia.org/wiki/C_(programming_language)>) and uses the [PBC](https://crypto.stanford.edu/pbc/) and [Nettle](http://www.lysator.liu.se/~nisse/nettle/) libraries, with the help of some utilities provided by the professor [Mario di Raimondo](https://diraimondo.dmi.unict.it/).
 
