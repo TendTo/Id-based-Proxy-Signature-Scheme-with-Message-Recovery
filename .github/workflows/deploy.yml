@@ -12,7 +12,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install dependencies
-        run: apt-get install -y check gmp nettle
+        run: sudo apt-get install -y check gmp nettle
     
       - name: Build pbc
         run: |
