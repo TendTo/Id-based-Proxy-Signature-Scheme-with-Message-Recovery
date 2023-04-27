@@ -14,8 +14,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y check check-dev libgmp-dev nettle-dev
-    
+          sudo apt-get install -y libgmp-dev nettle-dev
+
       - name: Build pbc
         run: |
           wget https://crypto.stanford.edu/pbc/files/pbc-0.5.14.tar.gz
@@ -24,6 +24,20 @@ jobs:
           ./configure
           make
           sudo make install
+          cd ..
+      
+      - name: Build check
+        run: |
+          sudo apt-get install -y texlive texinfo texi2html doxygen
+          wget https://github.com/libcheck/check/releases/download/0.15.2/check-0.15.2.tar.gz
+          tar -xvf check-0.15.2.tar.gz
+          cd check-0.15.2
+          autoreconf --install
+          ./configure
+          make
+          make check
+          sudo make install
+          sudo ldconfig
           cd ..
 
       - name: Test
