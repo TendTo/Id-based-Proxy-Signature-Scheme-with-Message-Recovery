@@ -14,7 +14,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y check libgmp-dev nettle-dev
+          sudo apt-get install -y check check-dev libgmp-dev nettle-dev
     
       - name: Build pbc
         run: |
