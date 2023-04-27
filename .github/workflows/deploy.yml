@@ -23,7 +23,7 @@ jobs:
           cd pbc-0.5.14
           ./configure
           make
-          make install
+          sudo make install
           cd ..
 
       - name: Test
