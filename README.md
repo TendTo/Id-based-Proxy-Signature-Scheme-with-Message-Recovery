@@ -3,6 +3,13 @@
 This is a prototype implementation of the Id based Proxy Signature Scheme with Message Recovery as described in the [paper](https://www.researchgate.net/publication/283648628_An_Improved_ID-based_Proxy_Signature_Scheme_with_Message_Recovery).  
 The implementation is written in [c](<https://en.wikipedia.org/wiki/C_(programming_language)>) and uses the [PBC](https://crypto.stanford.edu/pbc/) and [Nettle](http://www.lysator.liu.se/~nisse/nettle/) libraries, with the help of some utilities provided by the professor [Mario di Raimondo](https://diraimondo.dmi.unict.it/).
 
+> **Disclaimer**  
+> This project is a prototype implementation of the scheme described in the paper made by a student.
+> It is not meant to be used in production environments.
+> The code is provided as is, without any warranty.
+> There is no guarantee that it is secure or that it will work as expected.
+> If you find any bugs or vulnerabilities, feel free to open an issue.
+
 ## Requirements
 
 - [PBC](https://crypto.stanford.edu/pbc/)
@@ -47,7 +54,8 @@ Once it has been compiled, the project can be run by executing the following com
 ## Usage
 
 After the compilation, an executable will be created in the `bin` directory.  
-You can run it directly or use the `run.sh` script, which will keep checking for changes in the source files and recompile the project if needed.
+You can run it directly or use the `run.sh` script, which will keep checking for changes in the source files and recompile the project if needed.  
+To see the whole scheme in action, with all its steps, you use the `workflow.sh` script.
 
 ```shell
 ./run.sh <operation> [options]
