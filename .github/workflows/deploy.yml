@@ -15,11 +15,16 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y check libgmp-dev nettle-dev
-
+    
       - name: Build pbc
         run: |
-          wget http://voltar.org/pbcfiles/libpbc-dev_0.5.12_amd64.deb
-          sudo dpkg -i libpbc-dev_0.5.12_amd64.deb
+          wget https://crypto.stanford.edu/pbc/files/pbc-0.5.14.tar.gz
+          tar -xvf pbc-0.5.14.tar.gz
+          cd pbc-0.5.14
+          ./configure
+          make
+          make install
+          cd ..
 
       - name: Test
         run: |
@@ -42,7 +47,7 @@ jobs:
     steps:
       - name: Setup Pages
         uses: actions/configure-pages@v2
-
+     
       - name: Run doxygen
         uses: mattnotmitt/doxygen-action@v1.9.5
 
